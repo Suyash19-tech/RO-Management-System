@@ -4,9 +4,9 @@ import { ShieldCheck, ArrowRight, ShieldAlert } from "lucide-react";
 interface AMCStatusCardProps {
   active: boolean;
   details?: {
-    planName: string;
-    expiryDate: string;
-    daysRemaining: number;
+    planName?: string;
+    expiryDate?: string;
+    daysRemaining?: number;
   };
 }
 

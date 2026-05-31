@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { fetchTickets, Ticket } from "@/lib/api/history";
-import { TicketCard, TicketCardSkeleton } from "@/components/history/TicketCard";
+import { TicketCard } from "@/components/history/TicketCard";
+import { WaterDropLoader } from "@/components/ui/WaterDropLoader";
 import { EmptyState } from "@/components/history/EmptyState";
 
 export default function ServiceHistoryScreen() {
@@ -27,7 +28,7 @@ export default function ServiceHistoryScreen() {
   const displayTickets = activeTab === "ACTIVE" ? activeTickets : completedTickets;
 
   return (
-    <div className="flex-1 bg-[#F8FAFC] h-full flex flex-col relative overflow-hidden">
+    <div className="flex-1 h-full flex flex-col relative overflow-hidden">
       {/* Header */}
       <div className="pt-6 pb-2 px-4 bg-white z-20 flex items-center gap-3">
         <button 
@@ -64,10 +65,7 @@ export default function ServiceHistoryScreen() {
       {/* List Area */}
       <div className="flex-1 overflow-y-auto px-6 py-6 pb-20">
         {loading ? (
-          <div className="space-y-4">
-            <TicketCardSkeleton />
-            <TicketCardSkeleton />
-          </div>
+          <WaterDropLoader />
         ) : (
           <AnimatePresence mode="popLayout">
             {displayTickets.length === 0 ? (

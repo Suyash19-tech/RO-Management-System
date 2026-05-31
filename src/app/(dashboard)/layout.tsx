@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-gradient-to-b from-[#F8FAFC] to-[#eef5fd] font-sans w-full relative">
+    <div className="flex flex-col min-h-[100dvh] bg-[#F8FAFC] font-sans w-full relative">
       <FloatingBubbles />
       
       {/* Top Navigation Header */}

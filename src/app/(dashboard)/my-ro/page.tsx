@@ -5,12 +5,10 @@ import { motion } from "framer-motion";
 
 import { fetchMyRODetails, ROUnitDetails } from "@/lib/api/ro-unit";
 
-import { ROHeroCard, ROHeroCardSkeleton } from "@/components/my-ro/ROHeroCard";
-import { ROCareBreakdown, ROCareBreakdownSkeleton } from "@/components/my-ro/ROCareBreakdown";
-import { ServiceUsageCard, ServiceUsageCardSkeleton } from "@/components/my-ro/ServiceUsageCard";
-import { AMCStatusCard, AMCStatusCardSkeleton } from "@/components/dashboard/AMCStatusCard";
-import { TimelineCard, TimelineCardSkeleton } from "@/components/my-ro/TimelineCard";
-import { TechnicianNotesCard, TechnicianNotesCardSkeleton } from "@/components/my-ro/TechnicianNotesCard";
+import { ROHeroCard } from "@/components/my-ro/ROHeroCard";
+import { ROCareBreakdown } from "@/components/my-ro/ROCareBreakdown";
+import { ServiceUsageCard } from "@/components/my-ro/ServiceUsageCard";
+import { WaterDropLoader } from "@/components/ui/WaterDropLoader";
 
 export default function MyROScreen() {
 
@@ -30,24 +28,17 @@ export default function MyROScreen() {
       opacity: 1,
       transition: { staggerChildren: 0.1 }
     }
-  };
+  } as const;
 
   const item = {
     hidden: { opacity: 0, y: 15 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-  };
+  } as const;
 
   return (
     <div className="flex-1 bg-[#F8FAFC] h-full overflow-y-auto pb-20 relative">
       {loading ? (
-        <div className="space-y-6 pt-2">
-          <ROHeroCardSkeleton />
-          <ROCareBreakdownSkeleton />
-          <ServiceUsageCardSkeleton />
-          <AMCStatusCardSkeleton />
-          <TechnicianNotesCardSkeleton />
-          <TimelineCardSkeleton />
-        </div>
+        <WaterDropLoader />
       ) : (
         <motion.div 
           variants={container}
@@ -64,7 +55,7 @@ export default function MyROScreen() {
                 warrantyExpiry={data!.warrantyExpiry}
                 amcStatus={data!.amc.active}
                 freeServicesUsed={data!.serviceUsage.used}
-                freeServicesTotal={data!.serviceUsage.total}
+                freeServicesTotal={data!.serviceUsage.allocated}
               />
             </motion.div>
 
@@ -75,18 +66,6 @@ export default function MyROScreen() {
 
           <motion.div variants={item}>
             <ServiceUsageCard usage={data!.serviceUsage} />
-          </motion.div>
-
-          <motion.div variants={item}>
-            <AMCStatusCard active={data!.amc.active} details={data!.amc} />
-          </motion.div>
-          
-          <motion.div variants={item}>
-            <TechnicianNotesCard notes={data!.technicianNotes} />
-          </motion.div>
-
-          <motion.div variants={item}>
-            <TimelineCard timeline={data!.timeline} />
           </motion.div>
 
         </motion.div>

@@ -6,68 +6,144 @@ interface ScoreCardProps {
 }
 
 export function ScoreCard({ score }: ScoreCardProps) {
-  // SVG Path for a perfect semi-circle
-  const radius = 60;
-  const circumference = Math.PI * radius; // Half circle length
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+  // Arc geometry: full semi-circle from 210° to 330° (240° sweep like a gauge)
+  const cx = 80;
+  const cy = 80;
+  const r = 60;
+
+  // Convert degrees to radians helper
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+  // Arc from 210° to 330° (240° sweep)
+  const startAngle = 210;
+  const endAngle = 330;
+  const totalSweep = 240; // 330 - 210 + 360 = 360... no: 210->330 going clockwise the long way = 240°
+  
+  const startRad = toRad(startAngle);
+  const endRad = toRad(endAngle);
+  
+  const startX = cx + r * Math.cos(startRad);
+  const startY = cy + r * Math.sin(startRad);
+  const endX = cx + r * Math.cos(endRad);
+  const endY = cy + r * Math.sin(endRad);
+
+  // Full track arc path (large-arc-flag=1 for 240° > 180°)
+  const trackPath = `M ${startX} ${startY} A ${r} ${r} 0 1 1 ${endX} ${endY}`;
+
+  // Progress arc — calculate the angle at score%
+  const progressAngle = startAngle + (score / 100) * totalSweep;
+  const progressRad = toRad(progressAngle);
+  const progressX = cx + r * Math.cos(progressRad);
+  const progressY = cy + r * Math.sin(progressRad);
+
+  // large-arc flag: if sweep > 180°
+  const progressSweep = (score / 100) * totalSweep;
+  const largeArc = progressSweep > 180 ? 1 : 0;
+  const progressPath = `M ${startX} ${startY} A ${r} ${r} 0 ${largeArc} 1 ${progressX} ${progressY}`;
+
+  const getConditionColor = (s: number) =>
+    s >= 80 ? "#00C48C" : s >= 60 ? "#FFB020" : "#FF4D4F";
+  const getConditionText = (s: number) =>
+    s >= 80 ? "Excellent" : s >= 60 ? "Good" : "Needs Attention";
 
   return (
-    <div className="w-full rounded-[2rem] bg-gradient-to-br from-[#003B9D] via-[#0052D4] to-[#007aff] p-5 md:p-8 text-white relative overflow-hidden flex flex-col shadow-[0_20px_40px_rgba(0,82,212,0.25)] min-h-[160px]">
+    <div className="w-full rounded-[2rem] bg-gradient-to-br from-[#003B9D] via-[#0052D4] to-[#007aff] p-5 md:p-6 text-white relative overflow-hidden flex flex-col shadow-[0_20px_40px_rgba(0,82,212,0.25)] min-h-[180px]">
       
-      {/* Perfectly Blended Water Background */}
+      {/* Water Background */}
       <div className="absolute inset-0 pointer-events-none rounded-[2rem] overflow-hidden">
         <img 
           src="/water.png" 
           alt="Water Splash" 
-          className="w-full h-full object-cover object-right mix-blend-screen opacity-90 drop-shadow-2xl scale-[1.02]"
+          className="w-full h-full object-cover object-right mix-blend-screen opacity-90 scale-[1.02]"
           style={{ maskImage: 'linear-gradient(to right, transparent 0%, black 60%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 60%)' }}
         />
       </div>
 
-      <div className="relative z-10 w-full md:w-[60%] flex flex-col gap-2 py-0">
-        <h3 className="text-[16px] md:text-lg font-bold tracking-wide drop-shadow-md">RO Care Score</h3>
+      <div className="relative z-10 w-full flex flex-row items-center gap-4">
         
-        {/* Perfect Semi-Circle Gauge */}
-        <div className="relative w-36 md:w-44 mt-1">
-          <svg className="w-full h-auto drop-shadow-lg overflow-visible" viewBox="0 0 140 85">
-            <defs>
-              <linearGradient id="progressGradient" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#00e5ff" />
-                <stop offset="100%" stopColor="#ffffff" />
-              </linearGradient>
-            </defs>
-            <path 
-              d="M 10 70 A 60 60 0 0 1 130 70" 
-              className="stroke-[#00287a]/80" 
-              strokeWidth="11" 
-              fill="transparent" 
-              strokeLinecap="round"
-            />
-            <path 
-              d="M 10 70 A 60 60 0 0 1 130 70" 
-              stroke="url(#progressGradient)"
-              className="transition-all duration-1000 ease-out" 
-              strokeWidth="11" 
-              fill="transparent"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-            />
-          </svg>
+        {/* Left: Gauge */}
+        <div className="flex-shrink-0">
+          <p className="text-[13px] font-bold tracking-wide drop-shadow-md mb-1 opacity-90">RO Care Score</p>
           
-          <div className="absolute inset-x-0 bottom-0 flex justify-center translate-y-1 md:translate-y-2">
-            <span className="text-[38px] md:text-[46px] font-extrabold tracking-tight leading-none drop-shadow-md text-white">{score}%</span>
+          <div className="relative w-[160px] h-[110px]">
+            <svg width="160" height="110" viewBox="0 0 160 110" className="overflow-visible">
+              <defs>
+                <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#00e5ff" />
+                  <stop offset="100%" stopColor="#ffffff" />
+                </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              
+              {/* Track */}
+              <path
+                d={trackPath}
+                fill="none"
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth="10"
+                strokeLinecap="round"
+              />
+              
+              {/* Progress */}
+              <path
+                d={progressPath}
+                fill="none"
+                stroke="url(#arcGradient)"
+                strokeWidth="10"
+                strokeLinecap="round"
+                filter="url(#glow)"
+                className="transition-all duration-1000 ease-out"
+              />
+
+              {/* Score text — positioned at center of arc */}
+              <text
+                x={cx}
+                y={cy + 8}
+                textAnchor="middle"
+                className="font-extrabold"
+                fill="white"
+                fontSize="28"
+                fontWeight="900"
+                fontFamily="system-ui"
+              >
+                {score}%
+              </text>
+            </svg>
           </div>
         </div>
 
-        <div className="flex flex-col items-start w-full gap-2 mt-1">
-          <p className="text-[13px] md:text-[15px] font-medium leading-relaxed drop-shadow-sm whitespace-nowrap">
-            Your RO is in <span className="text-[#00e5ff] font-bold">Good Condition</span>
-          </p>
+        {/* Right: Info */}
+        <div className="flex flex-col gap-3 flex-1 justify-center">
+          <div>
+            <p className="text-[11px] font-semibold opacity-70 uppercase tracking-wider">Status</p>
+            <p className="text-[15px] font-bold mt-0.5" style={{ color: getConditionColor(score) }}>
+              {getConditionText(score)}
+            </p>
+          </div>
           
-          <button className="bg-white text-[#0052D4] px-4 md:px-6 py-2 rounded-full font-bold text-[12px] md:text-sm shadow-[0_8px_16px_rgba(0,0,0,0.1)] hover:scale-105 transition-transform active:scale-95 flex items-center gap-1.5">
+          <div>
+            <p className="text-[11px] font-semibold opacity-70 uppercase tracking-wider">Health</p>
+            <div className="mt-1.5 w-full bg-white/20 h-2 rounded-full overflow-hidden">
+              <div 
+                className="h-full rounded-full transition-all duration-1000"
+                style={{ 
+                  width: `${score}%`,
+                  background: `linear-gradient(to right, #00e5ff, ${getConditionColor(score)})`
+                }}
+              />
+            </div>
+            <p className="text-[10px] opacity-60 mt-1">{score}/100 points</p>
+          </div>
+
+          <button className="bg-white text-[#0052D4] px-4 py-2 rounded-full font-bold text-[11px] shadow-lg hover:scale-105 transition-transform active:scale-95 flex items-center gap-1.5 w-fit">
             View Details
-            <ArrowRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

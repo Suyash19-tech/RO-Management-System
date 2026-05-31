@@ -3,14 +3,27 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { fetchDashboardData, DashboardData } from "@/lib/api/dashboard";
-import { ScoreCard } from "@/components/dashboard/ScoreCard";
+import { HeroBanner } from "@/components/dashboard/HeroBanner";
 import { QuickActionGrid } from "@/components/dashboard/QuickActionGrid";
+import { WaterDropLoader } from "@/components/ui/WaterDropLoader";
 
 export default function DashboardHome() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [greeting, setGreeting] = useState({ text: "Good Morning", emoji: "🌅" });
 
   useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      setGreeting({ text: "Good Morning", emoji: "🌅" });
+    } else if (hour >= 12 && hour < 17) {
+      setGreeting({ text: "Good Afternoon", emoji: "☀️" });
+    } else if (hour >= 17 && hour < 21) {
+      setGreeting({ text: "Good Evening", emoji: "🌇" });
+    } else {
+      setGreeting({ text: "Good Night", emoji: "🌙" });
+    }
+
     fetchDashboardData().then((res) => {
       setData(res);
       setLoading(false);
@@ -20,45 +33,77 @@ export default function DashboardHome() {
   const container = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.1 } }
-  };
+  } as const;
 
   const item = {
     hidden: { opacity: 0, y: 15 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  } as const;
+
+  const getGreetingTheme = () => {
+    // Elegant, highly-refined brand colors matching the Sardar Ji RO corporate theme
+    return {
+      nameColor: "text-[#0052cc]",
+      accentBg: "bg-slate-50",
+      indicatorColor: "bg-[#00B8A9]"
+    };
   };
 
+  const theme = getGreetingTheme();
+
   if (loading) {
-    return (
-      <div className="space-y-6 animate-pulse w-full">
-        <div className="flex flex-col lg:flex-row gap-6 h-[400px]">
-          <div className="w-full h-full bg-slate-200 rounded-3xl" />
-        </div>
-      </div>
-    );
+    return <WaterDropLoader />;
   }
 
   return (
-    <div className="space-y-4 w-full">
-      {/* Page Header Area - Pushed up and compact */}
-      <div className="mb-4 -mt-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-800 flex items-center gap-2">
-          Good Morning, Suyash <span className="text-3xl">😊</span>
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-4 w-full"
+    >
+      {/* Greeting */}
+      <motion.div variants={item} className="pt-5 pb-1 flex flex-col gap-1">
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 flex items-center flex-wrap gap-x-2 gap-y-1">
+          <span>{greeting.text},</span>
+          <span className={theme.nameColor}>
+            {data?.user?.name?.split(' ')[0] || "Suyash"}
+          </span>
+          <motion.span 
+            className="inline-block text-3xl select-none"
+            animate={{ 
+              y: [0, -3, 0]
+            }}
+            transition={{ 
+              repeat: Infinity, 
+              duration: 3, 
+              ease: "easeInOut" 
+            }}
+          >
+            {greeting.emoji}
+          </motion.span>
         </h1>
-        <p className="text-sm md:text-base text-slate-500 mt-1 font-medium">Stay hydrated, Stay healthy</p>
-      </div>
-
-      {/* Top Hero Row */}
-      <div className="flex flex-col lg:flex-row gap-6 mb-6 w-full">
-        <div className="w-full">
-          <ScoreCard score={data!.roScore} />
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="relative flex h-2 w-2">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${theme.indicatorColor} opacity-75`}></span>
+            <span className={`relative inline-flex rounded-full h-2 w-2 ${theme.indicatorColor}`}></span>
+          </span>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+            Stay Hydrated • Stay Healthy
+          </span>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Quick Links Row - Cute squares */}
-      <div className="w-full">
+      {/* Hero Slideshow Banner */}
+      <motion.div variants={item}>
+        <HeroBanner />
+      </motion.div>
+
+      {/* Quick Action Grid */}
+      <motion.div variants={item}>
         <QuickActionGrid />
-      </div>
+      </motion.div>
 
-    </div>
+    </motion.div>
   );
 }

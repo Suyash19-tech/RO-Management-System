@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/Buttons";
 import { OTPInput } from "@/components/ui/Inputs";
 
-export default function VerifyScreen() {
+function VerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const phone = searchParams.get("phone") || "9876543210";
@@ -97,5 +97,17 @@ export default function VerifyScreen() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyScreen() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex flex-col bg-white h-full items-center justify-center p-6 text-slate-500 font-semibold">
+        Loading verification...
+      </div>
+    }>
+      <VerifyContent />
+    </Suspense>
   );
 }

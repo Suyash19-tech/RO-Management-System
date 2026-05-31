@@ -28,12 +28,12 @@ export default function AMCScreen() {
   const container = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.1 } }
-  };
+  } as const;
 
   const item = {
     hidden: { opacity: 0, y: 15 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-  };
+  } as const;
 
   return (
     <div className="flex-1 bg-[#F8FAFC] h-full overflow-y-auto pb-20 relative">
