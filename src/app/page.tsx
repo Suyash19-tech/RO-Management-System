@@ -16,39 +16,39 @@ export default function SplashScreen() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F4C81] to-[#0a355c] h-full relative overflow-hidden">
-      {/* Subtle Water Ripples (CSS Only) */}
-      <div className="absolute inset-0 opacity-20 mix-blend-overlay flex items-center justify-center">
-        <motion.div 
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: [1, 2, 3], opacity: [0.5, 0.2, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeOut" }}
-          className="w-40 h-40 border-4 border-white rounded-full absolute"
-        />
-        <motion.div 
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: [1, 2, 3], opacity: [0.5, 0.2, 0] }}
-          transition={{ duration: 3, delay: 1, repeat: Infinity, ease: "easeOut" }}
-          className="w-40 h-40 border-4 border-[#00B8A9] rounded-full absolute"
-        />
-      </div>
-
       <motion.div 
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="flex flex-col items-center z-10"
+        className="flex flex-col items-center z-10 w-full"
       >
-        {/* Mascot / Logo Image */}
-        <div className="w-48 h-48 mb-6 relative drop-shadow-2xl">
-          <img 
-            src="/assets/mascot.png" 
-            alt="Sardarji RO Logo" 
-            className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
-            onError={(e) => {
-              // Fallback if image doesn't exist yet
-              e.currentTarget.src = "https://ui-avatars.com/api/?name=Sardarji+RO&background=00B8A9&color=fff&size=200&rounded=true&font-size=0.33";
-            }}
-          />
+        <div className="relative mb-10 flex items-center justify-center">
+          {/* Subtle Water Ripples (Oscillating Waves) */}
+          <div className="absolute flex items-center justify-center pointer-events-none z-0">
+            {[0, 1, 2, 3].map((i) => (
+              <motion.div 
+                key={i}
+                initial={{ scale: 0.95, opacity: 0.7 }}
+                animate={{ scale: 2.5, opacity: 0 }}
+                transition={{ 
+                  duration: 3, 
+                  repeat: Infinity, 
+                  ease: "easeOut",
+                  delay: i * 0.75 
+                }}
+                className="w-56 h-56 border-2 border-white/40 rounded-full absolute"
+              />
+            ))}
+          </div>
+
+          {/* Mascot / Logo Image as a Perfect Circle */}
+          <div className="w-56 h-56 relative z-10 flex items-center justify-center rounded-full bg-white overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.15)]">
+            <img 
+              src="/Sardarji_RO_logo.png" 
+              alt="Sardarji RO Logo" 
+              className="w-[115%] h-[115%] object-cover"
+            />
+          </div>
         </div>
 
         <motion.div

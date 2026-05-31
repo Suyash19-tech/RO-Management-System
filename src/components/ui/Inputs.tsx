@@ -40,3 +40,31 @@ export const OTPInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttrib
   );
 });
 OTPInput.displayName = "OTPInput";
+
+export const TextInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, ...props }, ref) => {
+  return (
+    <input
+      ref={ref}
+      className={cn(
+        "w-full h-14 px-4 rounded-xl border-2 border-slate-100 bg-slate-50 text-base font-medium outline-none transition-all focus:border-[#0F4C81] focus:bg-white placeholder:text-slate-400",
+        className
+      )}
+      {...props}
+    />
+  );
+});
+TextInput.displayName = "TextInput";
+
+export const TextAreaInput = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(({ className, ...props }, ref) => {
+  return (
+    <textarea
+      ref={ref}
+      className={cn(
+        "w-full p-4 rounded-xl border-2 border-slate-100 bg-slate-50 text-base font-medium outline-none transition-all focus:border-[#0F4C81] focus:bg-white placeholder:text-slate-400 resize-none",
+        className
+      )}
+      {...props}
+    />
+  );
+});
+TextAreaInput.displayName = "TextAreaInput";
