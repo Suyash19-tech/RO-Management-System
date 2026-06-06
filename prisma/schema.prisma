@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String   @unique
+  altPhone  String?
+  email     String?
+  address   String
+  status    String   @default("Active")
+  joinDate  DateTime @default(now())
+
+  amcs          Amc[]
+  appointments  Appointment[]
+  installations Installation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id        String   @id @default(cuid())
+  name      String
+  sku       String   @unique
+  category  String
+  price     Float
+  status    String   @default("Published") // Published, Draft, Archived
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  source    String   // Website Form, Facebook Ad, Referral
+  status    String   @default("New") // New, Contacted, Converted, Dead
+  rep       String   @default("Unassigned")
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Amc {
+  id            String    @id @default(cuid())
+  customerName  String
+  customerPhone String?
+  customer      Customer? @relation(fields: [customerPhone], references: [phone], onDelete: Cascade)
+  address       String
+  plan          String
+  startDate     DateTime
+  endDate       DateTime
+  status        String    @default("Active") // Active, Expiring Soon, Expired
+  payment       String    @default("Paid")   // Paid, Pending
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Appointment {
+  id             String    @id @default(cuid())
+  customerName   String
+  customerPhone  String?
+  customer       Customer? @relation(fields: [customerPhone], references: [phone], onDelete: Cascade)
+  address        String
+  type           String    // Installation, Repair Service, AMC Visit, Routine Maintenance
+  tech           String    @default("Unassigned")
+  date           DateTime
+  time           String    // e.g. "01:30 PM"
+  status         String    @default("Scheduled") // Pending, Scheduled, In Progress, Completed, Cancelled
+  // Completion fields (filled by technician after job)
+  remarks        String?
+  itemsUsed      String?   // JSON string: [{name, qty, cost}]
+  costCharged    Float?    @default(0)
+  paymentStatus  String?   @default("Unpaid") // Paid, Unpaid, Free
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model InventoryItem {
+  id        String   @id @default(cuid())
+  item      String
+  sku       String   @unique
+  category  String
+  price     Float    @default(0)
+  stock     Int      @default(0)
+  reorder   Int      @default(10)
+  status    String   @default("In Stock") // In Stock, Low Stock, Out of Stock
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Installation {
+  id             String    @id @default(cuid())
+  customerName   String
+  customerPhone  String?
+  customer       Customer? @relation(fields: [customerPhone], references: [phone], onDelete: Cascade)
+  address        String
+  model          String
+  equipments     String?
+  servicesCount  Int       @default(2)
+  expiryDate     DateTime?
+  roPrice        Float     @default(0)
+  equipmentPrice Float     @default(0)
+  amcPrice       Float     @default(0)
+  discount       Float     @default(0)
+  totalPrice     Float     @default(0)
+  amountPaid     Float     @default(0)
+  amountDue      Float     @default(0)
+  paymentMethod  String    @default("Cash")
+  tech           String    @default("Unassigned")
+  date           DateTime
+  time           String
+  status         String    @default("Pending") // Pending, Scheduled, In Progress, Completed
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Technician {
+  id         String   @id @default(cuid())
+  name       String
+  phone      String
+  spec       String   // Specialty, e.g. "Installation & Repair"
+  status     String   @default("On Duty") // On Duty, Off Duty
+  rating     Float    @default(5.0)
+  activeJobs Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
