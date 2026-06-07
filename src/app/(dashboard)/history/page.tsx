@@ -16,10 +16,22 @@ export default function ServiceHistoryScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchTickets().then((data) => {
-      setTickets(data);
-      setLoading(false);
-    });
+    let mounted = true;
+    const load = () => {
+      fetchTickets().then((data) => {
+        if (mounted) {
+          setTickets(data);
+          setLoading(false);
+        }
+      });
+    };
+    
+    load();
+    const interval = setInterval(load, 3000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const activeTickets = tickets.filter(t => t.status !== "COMPLETED");

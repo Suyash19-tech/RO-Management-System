@@ -75,7 +75,7 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
     }
 
     return {
-      id: "TKT-" + apt.id.slice(0, 4).toUpperCase(),
+      id: "TKT-" + apt.id.slice(-6).toUpperCase(),
       issueType: apt.type,
       status: status,
       createdAt: apt.createdAt,

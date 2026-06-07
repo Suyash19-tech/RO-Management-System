@@ -21,11 +21,23 @@ export default function MyROScreen() {
   const [showInvoice, setShowInvoice] = useState(false);
 
   useEffect(() => {
-    fetchProfile().then(p => setProfile(p));
-    fetchMyRODetails().then((res) => {
-      setData(res);
-      setLoading(false);
-    });
+    let mounted = true;
+    const load = () => {
+      fetchProfile().then(p => { if (mounted) setProfile(p) });
+      fetchMyRODetails().then((res) => {
+        if (mounted) {
+          setData(res);
+          setLoading(false);
+        }
+      });
+    };
+    
+    load();
+    const interval = setInterval(load, 3000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const container = {

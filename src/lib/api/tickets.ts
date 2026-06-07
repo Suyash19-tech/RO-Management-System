@@ -27,7 +27,7 @@ export const createTicket = async (payload: CreateTicketPayload): Promise<Ticket
         customerName: parsed.name,
         customerPhone: parsed.phone,
         address: parsed.address || "No Address Provided",
-        type: payload.issueType,
+        type: `${payload.issueType} — ${payload.serviceType === 'FREE' ? 'Free Service' : payload.serviceType === 'AMC' ? 'AMC Service' : 'Paid Service'}`,
         date: payload.preferredDate,
         time: payload.preferredSlot,
         status: "Pending",

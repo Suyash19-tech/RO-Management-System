@@ -22,12 +22,25 @@ export default function TicketDetailScreen() {
 
   useEffect(() => {
     fetchProfile().then(p => setProfile(p));
-    if (params.id) {
-      fetchTicketById(params.id as string).then((res) => {
-        setTicket(res);
-        setLoading(false);
-      });
-    }
+    
+    let mounted = true;
+    const load = () => {
+      if (params.id) {
+        fetchTicketById(params.id as string).then((res) => {
+          if (mounted) {
+            setTicket(res);
+            setLoading(false);
+          }
+        });
+      }
+    };
+    
+    load();
+    const interval = setInterval(load, 3000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, [params.id]);
 
   if (loading) {

@@ -24,22 +24,31 @@ export default function DashboardHome() {
       setGreeting({ text: "Good Night", emoji: "🌙" });
     }
 
-    fetchDashboardData().then((res) => {
-      if (res) {
-        // Try to inject user from localStorage
-        let user = undefined;
-        try {
-          const stored = localStorage.getItem("customer_profile");
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            user = { name: parsed.name, phone: parsed.phone };
-          }
-        } catch(e) {}
-        
-        setData({ ...res, user });
-      }
-      setLoading(false);
-    });
+    let mounted = true;
+    const load = () => {
+      fetchDashboardData().then((res) => {
+        if (res && mounted) {
+          let user = undefined;
+          try {
+            const stored = localStorage.getItem("customer_profile");
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              user = { name: parsed.name, phone: parsed.phone };
+            }
+          } catch(e) {}
+          
+          setData({ ...res, user });
+        }
+        if (mounted) setLoading(false);
+      });
+    };
+    
+    load();
+    const interval = setInterval(load, 3000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const container = {
