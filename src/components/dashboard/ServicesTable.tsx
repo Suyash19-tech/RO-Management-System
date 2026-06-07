@@ -63,6 +63,7 @@ export function ServicesTable() {
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
   const [assignTech, setAssignTech] = useState("Unassigned");
+  const [adminRemark, setAdminRemark] = useState("");
   const [notifying, setNotifying] = useState(false);
   const [notified, setNotified] = useState(false);
 
@@ -109,6 +110,7 @@ export function ServicesTable() {
       setAssignTime(selectedApt.time || "");
       setAssignDate(selectedApt.date ? selectedApt.date.split('T')[0] : "");
       setAssignTech(selectedApt.tech);
+      setAdminRemark("");
 
       fetch(`/api/customers/${encodeURIComponent(selectedApt.customerPhone)}`)
         .then(res => res.json())
@@ -136,7 +138,8 @@ export function ServicesTable() {
           time: assignTime,
           date: assignDate,
           tech: assignTech,
-          status: 'Scheduled'
+          status: 'Scheduled',
+          remarks: adminRemark ? `Admin: ${adminRemark} | Customer: ${selectedApt.remarks || ''}` : selectedApt.remarks
         })
       });
 
@@ -156,6 +159,36 @@ export function ServicesTable() {
       console.error("Failed to update appointment", error);
       setNotifying(false);
       alert("Failed to confirm appointment.");
+    }
+  };
+
+  const handleRequestReschedule = async () => {
+    if (!selectedApt) return;
+    setNotifying(true);
+
+    try {
+      await fetch(`/api/appointments/${selectedApt.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'Reschedule Requested',
+          remarks: adminRemark ? `Admin: ${adminRemark} | Customer: ${selectedApt.remarks || ''}` : selectedApt.remarks
+        })
+      });
+
+      setTimeout(() => {
+        setNotifying(false);
+        setNotified(true);
+        fetchAppointments();
+        setTimeout(() => {
+          setSelectedApt(null);
+          setNotified(false);
+        }, 2000);
+      }, 1500);
+    } catch (error) {
+      console.error("Failed to request reschedule", error);
+      setNotifying(false);
+      alert("Failed to request reschedule.");
     }
   };
 
@@ -348,6 +381,16 @@ export function ServicesTable() {
                   </div>
                 </div>
 
+                <div className="mb-6">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Message / Remark to Customer (Optional)</label>
+                  <textarea 
+                    value={adminRemark}
+                    onChange={(e) => setAdminRemark(e.target.value)}
+                    placeholder="E.g., 'We are fully booked this morning. Could we reschedule to the afternoon?'"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:bg-white focus:border-[#2563EB] outline-none resize-none h-20"
+                  />
+                </div>
+
                 {/* Confirm Button */}
                 {notified ? (
                   <div className="w-full p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-center gap-3">
@@ -360,19 +403,28 @@ export function ServicesTable() {
                     </div>
                   </div>
                 ) : (
-                  <button 
-                    onClick={handleConfirmAppointment}
-                    disabled={notifying || !assignDate || !assignTime}
-                    className="w-full py-3.5 bg-[#0B1B3D] hover:bg-slate-900 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-xl shadow-slate-900/20 transition-all flex items-center justify-center gap-2"
-                  >
-                    {notifying ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Sending Notification...
-                      </span>
-                    ) : (
-                      <>Confirm Appointment & Notify Customer <CheckCircle2 className="w-5 h-5" /></>
-                    )}
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button 
+                      onClick={handleRequestReschedule}
+                      disabled={notifying || !adminRemark}
+                      className="flex-1 py-3.5 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                    >
+                      Request Reschedule
+                    </button>
+                    <button 
+                      onClick={handleConfirmAppointment}
+                      disabled={notifying || !assignDate || !assignTime}
+                      className="flex-[2] py-3.5 bg-[#0B1B3D] hover:bg-slate-900 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-xl shadow-slate-900/20 transition-all flex items-center justify-center gap-2"
+                    >
+                      {notifying ? (
+                        <span className="flex items-center gap-2">
+                          <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Sending...
+                        </span>
+                      ) : (
+                        <>Confirm Appointment <CheckCircle2 className="w-5 h-5" /></>
+                      )}
+                    </button>
+                  </div>
                 )}
               </div>
 
