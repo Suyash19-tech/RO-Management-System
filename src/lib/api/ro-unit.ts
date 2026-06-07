@@ -40,55 +40,70 @@ export interface ROUnitDetails {
   technicianNotes: string[];
 }
 
-export const fetchMyRODetails = async (): Promise<ROUnitDetails> => {
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+export const fetchMyRODetails = async (): Promise<ROUnitDetails | null> => {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem("customer_profile");
+  if (!stored) return null;
+  
+  const parsed = JSON.parse(stored);
+  
+  const installation = parsed.installations?.[0];
+  if (!installation) return null;
+
+  const amc = parsed.amcs?.find((a: any) => a.status === 'ACTIVE');
+  
+  const timeline: ROUnitDetails["timeline"] = [];
+  if (installation) {
+    timeline.push({
+      id: "ev_1",
+      type: "INSTALLATION",
+      title: "RO Installed",
+      date: installation.date,
+      description: `Initial installation completed.`
+    });
+  }
+
+  // Add completed services to timeline
+  parsed.appointments?.filter((a: any) => a.status === 'COMPLETED').forEach((apt: any) => {
+    timeline.push({
+      id: apt.id,
+      type: "SERVICE",
+      title: apt.type,
+      date: apt.date,
+      description: apt.remarks || "Service completed successfully."
+    });
+  });
 
   return {
-    id: "ro_123",
-    publicId: "RO-A9B2C4",
-    brand: "Aquaguard",
-    model: "Marvel NXT",
-    capacity: "7 Ltr",
-    installationDate: "2023-05-30T00:00:00.000Z",
-    warrantyExpiry: "2024-05-30T00:00:00.000Z",
-    warrantyStatus: "ACTIVE",
-    roScore: 85,
+    id: installation.id,
+    publicId: "RO-" + installation.id.slice(0,6).toUpperCase(),
+    brand: "Sardarji RO",
+    model: installation.model || "Standard Model",
+    capacity: "Unknown",
+    installationDate: installation.date,
+    warrantyExpiry: new Date(new Date(installation.date).setFullYear(new Date(installation.date).getFullYear() + 1)).toISOString(),
+    warrantyStatus: new Date() > new Date(new Date(installation.date).setFullYear(new Date(installation.date).getFullYear() + 1)) ? "EXPIRED" : "ACTIVE",
+    roScore: 90,
     breakdown: {
       serviceStatus: "GOOD",
       filterStatus: "GOOD",
       membraneStatus: "GOOD",
-      openComplaints: 0,
+      openComplaints: parsed.appointments?.filter((a: any) => a.status !== 'COMPLETED').length || 0,
     },
     serviceUsage: {
-      allocated: 3,
-      used: 1,
-      remaining: 2,
+      allocated: installation.servicesCount || 3,
+      used: parsed.appointments?.filter((a: any) => a.status === 'COMPLETED').length || 0,
+      remaining: Math.max((installation.servicesCount || 3) - (parsed.appointments?.filter((a: any) => a.status === 'COMPLETED').length || 0), 0),
     },
     amc: {
-      active: true,
-      planName: "Comprehensive Gold AMC",
-      expiryDate: "2025-05-30T00:00:00.000Z",
-      daysRemaining: 365,
+      active: !!amc,
+      planName: amc?.plan || "No Active Plan",
+      expiryDate: amc?.endDate,
+      daysRemaining: amc?.endDate ? Math.ceil((new Date(amc.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0,
     },
-    timeline: [
-      {
-        id: "ev_2",
-        type: "SERVICE",
-        title: "Routine Maintenance",
-        date: "2023-11-15T00:00:00.000Z",
-        description: "Carbon filter changed, TDS adjusted to 80.",
-      },
-      {
-        id: "ev_1",
-        type: "INSTALLATION",
-        title: "RO Installed",
-        date: "2023-05-30T00:00:00.000Z",
-        description: "Initial installation completed by Techie Kumar.",
-      }
-    ],
+    timeline: timeline.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     technicianNotes: [
-      "Membrane health is currently good, but may require replacement in the next 3 months depending on local TDS levels.",
-      "Customer requested lower TDS setting."
+      "Device is running efficiently."
     ],
   };
 };

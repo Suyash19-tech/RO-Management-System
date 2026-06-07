@@ -25,46 +25,53 @@ export interface Ticket {
 }
 
 export const fetchTickets = async (): Promise<Ticket[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+  if (typeof window === "undefined") return [];
+  const stored = localStorage.getItem("customer_profile");
+  if (!stored) return [];
   
-  return [
-    {
-      id: "TKT-4921",
-      issueType: "Water Taste Problem",
-      status: "IN_PROGRESS",
-      createdAt: new Date().toISOString(),
-      scheduledSlot: "Today, Morning (9-12)",
-      technician: {
-        name: "Rajesh Kumar",
-        phone: "+91 9876543210",
-        photo: "https://i.pravatar.cc/150?u=rajesh"
-      },
-      customerNotes: "Water is tasting slightly bitter for the last 2 days.",
-      timeline: [
-        { status: "CREATED", timestamp: new Date(Date.now() - 7200000).toISOString(), description: "Service request created." },
-        { status: "ASSIGNED", timestamp: new Date(Date.now() - 3600000).toISOString(), description: "Assigned to Rajesh Kumar." },
-        { status: "ACCEPTED", timestamp: new Date(Date.now() - 1800000).toISOString(), description: "Technician is on the way." },
-        { status: "IN_PROGRESS", timestamp: new Date(Date.now() - 900000).toISOString(), description: "Work has started." }
-      ]
-    },
-    {
-      id: "TKT-1044",
-      issueType: "Filter Replacement",
-      status: "COMPLETED",
-      createdAt: new Date(Date.now() - 86400000 * 45).toISOString(),
-      resolution: "Replaced Carbon and Sediment Filters.",
-      rating: 5,
-      technicianRemarks: "Filters were heavily choked due to high TDS. Advised customer to monitor flow.",
-      partsReplaced: [
-        { name: "Carbon Filter", quantity: 1, cost: 450 },
-        { name: "Sediment Filter", quantity: 1, cost: 350 }
-      ],
-      timeline: [
-        { status: "CREATED", timestamp: new Date(Date.now() - 86400000 * 45).toISOString(), description: "Service request created." },
-        { status: "COMPLETED", timestamp: new Date(Date.now() - 86400000 * 44).toISOString(), description: "Service successfully completed." }
-      ]
+  const parsed = JSON.parse(stored);
+  
+  if (!parsed.appointments || parsed.appointments.length === 0) return [];
+
+  return parsed.appointments.map((apt: any) => {
+    const isCompleted = apt.status === 'COMPLETED';
+    const isPending = apt.status === 'PENDING';
+    
+    // Map backend status to frontend TicketStatus
+    let status: TicketStatus = "CREATED";
+    if (apt.status === "COMPLETED") status = "COMPLETED";
+    else if (apt.status === "IN_PROGRESS") status = "IN_PROGRESS";
+    else if (apt.status === "SCHEDULED") status = "ASSIGNED";
+    
+    const timeline = [
+      { status: "CREATED" as TicketStatus, timestamp: apt.createdAt, description: "Service request created." }
+    ];
+    
+    if (status !== "CREATED" && status !== "ASSIGNED") {
+      timeline.push({ status: "ASSIGNED" as TicketStatus, timestamp: apt.createdAt, description: `Assigned to ${apt.tech || 'Technician'}.` });
     }
-  ];
+    
+    if (isCompleted) {
+      timeline.push({ status: "COMPLETED" as TicketStatus, timestamp: apt.completedAt || apt.date, description: "Service successfully completed." });
+    }
+
+    return {
+      id: "TKT-" + apt.id.slice(0, 4).toUpperCase(),
+      issueType: apt.type,
+      status: status,
+      createdAt: apt.createdAt,
+      scheduledSlot: apt.time,
+      technician: apt.tech ? {
+        name: apt.tech,
+        phone: "N/A",
+      } : undefined,
+      resolution: apt.remarks,
+      rating: isCompleted ? 5 : undefined,
+      technicianRemarks: apt.remarks,
+      partsReplaced: apt.itemsUsed ? apt.itemsUsed.split(',').map((i: string) => ({ name: i.trim(), quantity: 1, cost: 0 })) : [],
+      timeline
+    };
+  }).sort((a: Ticket, b: Ticket) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 };
 
 export const fetchTicketById = async (id: string): Promise<Ticket | null> => {

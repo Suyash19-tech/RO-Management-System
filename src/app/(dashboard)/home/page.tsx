@@ -25,17 +25,19 @@ export default function DashboardHome() {
     }
 
     fetchDashboardData().then((res) => {
-      // Try to inject user from localStorage
-      let user = undefined;
-      try {
-        const stored = localStorage.getItem("customer_profile");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          user = { name: parsed.name, phone: parsed.phone };
-        }
-      } catch(e) {}
-      
-      setData({ ...res, user });
+      if (res) {
+        // Try to inject user from localStorage
+        let user = undefined;
+        try {
+          const stored = localStorage.getItem("customer_profile");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            user = { name: parsed.name, phone: parsed.phone };
+          }
+        } catch(e) {}
+        
+        setData({ ...res, user });
+      }
       setLoading(false);
     });
   }, []);

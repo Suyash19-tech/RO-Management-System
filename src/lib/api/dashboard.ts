@@ -26,42 +26,39 @@ export interface DashboardData {
   }>;
 }
 
-export const fetchDashboardData = async (): Promise<DashboardData> => {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+export const fetchDashboardData = async (): Promise<DashboardData | null> => {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem("customer_profile");
+  if (!stored) return null;
+  
+  const parsed = JSON.parse(stored);
+  
+  const amc = parsed.amcs?.find((a: any) => a.status === 'ACTIVE');
+  const recentTickets = parsed.appointments?.slice(0, 3).map((apt: any) => ({
+    id: apt.id,
+    issueType: apt.type,
+    status: apt.status,
+    createdAt: apt.date
+  })) || [];
 
   return {
-    roScore: 85,
-    nextService: "2024-07-15T00:00:00.000Z",
-    activeAMC: true,
-    amcDetails: {
-      planName: "Comprehensive Gold AMC",
-      expiryDate: "2025-05-30T00:00:00.000Z",
-      daysRemaining: 365,
-    },
+    roScore: 90,
+    nextService: parsed.appointments?.find((a: any) => a.status !== 'COMPLETED')?.date || "No upcoming service",
+    activeAMC: !!amc,
+    amcDetails: amc ? {
+      planName: amc.plan,
+      expiryDate: amc.endDate,
+      daysRemaining: Math.ceil((new Date(amc.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
+    } : undefined,
     notifications: [
       {
         id: "1",
-        title: "Filter Life Low",
-        body: "Your pre-filter is nearing end of life.",
+        title: "Welcome to Sardarji RO",
+        body: "Your profile is set up and active.",
         read: false,
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-      },
-      {
-        id: "2",
-        title: "Service Completed",
-        body: "Rajesh completed your service request.",
-        read: true,
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-      },
-    ],
-    recentTickets: [
-      {
-        id: "t1",
-        issueType: "Regular Service",
-        status: "COMPLETED",
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        createdAt: parsed.createdAt,
       }
     ],
+    recentTickets,
   };
 };

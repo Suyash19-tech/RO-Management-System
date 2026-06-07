@@ -24,37 +24,47 @@ export interface UserProfile {
   };
 }
 
-export const fetchProfile = async (): Promise<UserProfile> => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+export const fetchProfile = async (): Promise<UserProfile | null> => {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem("customer_profile");
+  if (!stored) return null;
   
+  const parsed = JSON.parse(stored);
+  
+  // Attempt to fetch fresh data
+  try {
+    const res = await fetch(`http://localhost:3000/api/customers/${parsed.phone}`);
+    if (res.ok) {
+      const fresh = await res.json();
+      localStorage.setItem("customer_profile", JSON.stringify(fresh));
+      Object.assign(parsed, fresh);
+    }
+  } catch (e) {
+    console.error("Could not fetch fresh profile", e);
+  }
+
   return {
-    id: "cus_01",
-    name: "Rahul Sharma",
-    phone: "+91 9876543210",
-    email: "rahul.sharma@example.com",
-    customerSince: "2023-05-30T00:00:00.000Z",
+    id: parsed.id,
+    name: parsed.name || "Unknown",
+    phone: parsed.phone,
+    email: parsed.email || "",
+    customerSince: parsed.createdAt,
     addresses: [
       {
         id: "addr_1",
-        label: "Home",
-        fullAddress: "142 Model Town, Near Gulati Chowk, Ludhiana, Punjab 141002",
+        label: "Primary Address",
+        fullAddress: parsed.address || "N/A",
         isPrimary: true
-      },
-      {
-        id: "addr_2",
-        label: "Office",
-        fullAddress: "Phase 8, Industrial Area, Mohali, Punjab",
-        isPrimary: false
       }
     ],
     roSummary: {
-      totalUnits: 1,
-      amcStatus: "ACTIVE",
-      totalServices: 4
+      totalUnits: parsed.installations?.length || 0,
+      amcStatus: parsed.amcs?.some((a: any) => a.status === 'ACTIVE') ? "ACTIVE" : "NONE",
+      totalServices: parsed.appointments?.filter((a: any) => a.status === 'COMPLETED').length || 0
     },
     settings: {
       pushNotifications: true,
-      smsNotifications: false,
+      smsNotifications: true,
       whatsappNotifications: true,
       darkMode: false
     }
@@ -62,6 +72,28 @@ export const fetchProfile = async (): Promise<UserProfile> => {
 };
 
 export const updateProfile = async (data: Partial<UserProfile>) => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return true;
+  if (typeof window === "undefined") return false;
+  const stored = localStorage.getItem("customer_profile");
+  if (!stored) return false;
+  const parsed = JSON.parse(stored);
+
+  try {
+    const res = await fetch(`http://localhost:3000/api/customers/${parsed.phone}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: data.name,
+        email: data.email,
+        address: data.addresses?.[0]?.fullAddress
+      })
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      localStorage.setItem("customer_profile", JSON.stringify({ ...parsed, ...updated }));
+      return true;
+    }
+  } catch (e) {
+    console.error("Failed to update profile", e);
+  }
+  return false;
 };
