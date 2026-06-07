@@ -16,6 +16,7 @@ type Appointment = {
   time: string;
   status: string;
   createdAt: string;
+  remarks?: string;
 };
 
 function Avatar({ name, isTech = false }: { name: string, isTech?: boolean }) {
@@ -259,7 +260,20 @@ export function ServicesTable() {
                 <div className="bg-amber-50/50 border border-amber-200/50 rounded-xl p-5">
                    <h4 className="text-xs font-bold text-amber-600/80 uppercase tracking-widest mb-2">Query Raised</h4>
                    <p className="font-bold text-slate-900 text-lg">{selectedApt.type}</p>
-                   <p className="text-xs text-slate-500 font-medium mt-1">Logged on {new Date(selectedApt.createdAt).toLocaleDateString()}</p>
+                   <p className="text-xs text-slate-500 font-medium mt-1 mb-3">Logged on {new Date(selectedApt.createdAt).toLocaleDateString()}</p>
+                   
+                   <div className="pt-3 border-t border-amber-200/50 space-y-2">
+                     <div>
+                       <span className="text-[10px] font-bold text-amber-600/80 uppercase tracking-widest">Requested Slot</span>
+                       <p className="text-sm font-semibold text-slate-800">{selectedApt.date ? new Date(selectedApt.date).toLocaleDateString() : 'N/A'} • {selectedApt.time || 'N/A'}</p>
+                     </div>
+                     {selectedApt.remarks && (
+                       <div>
+                         <span className="text-[10px] font-bold text-amber-600/80 uppercase tracking-widest">Customer Remarks</span>
+                         <p className="text-sm font-medium text-slate-700 italic">"{selectedApt.remarks}"</p>
+                       </div>
+                     )}
+                   </div>
                 </div>
                 
                 <div className="bg-emerald-50/50 border border-emerald-200/50 rounded-xl p-5">
