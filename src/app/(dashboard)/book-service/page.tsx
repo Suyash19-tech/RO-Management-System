@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { createTicket, CreateTicketPayload } from "@/lib/api/tickets";
+import { fetchMyRODetails, ROUnitDetails } from "@/lib/api/ro-unit";
 import { SuccessState } from "@/components/book-service/SuccessState";
 import {
   Droplet, Activity, Wrench, Volume2, ShieldAlert, Sparkles, Plus,
@@ -90,6 +91,11 @@ export default function BookServiceScreen() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successData, setSuccessData] = useState<{ id: string; time: string } | null>(null);
+  const [roData, setRoData] = useState<ROUnitDetails | null>(null);
+
+  useEffect(() => {
+    fetchMyRODetails().then(setRoData);
+  }, []);
 
   const [payload, setPayload] = useState<CreateTicketPayload>({
     issueType: "",
@@ -145,7 +151,22 @@ export default function BookServiceScreen() {
   };
 
   const selectedIssue = ISSUES.find(i => i.id === payload.issueType);
-  const selectedService = SERVICE_TYPES.find(s => s.id === payload.serviceType);
+  
+  // Dynamically update the SERVICE_TYPES with actual remaining free services
+  const dynamicServiceTypes = useMemo(() => {
+    return SERVICE_TYPES.map(type => {
+      if (type.id === "FREE" && roData) {
+        return {
+          ...type,
+          desc: `${roData.serviceUsage.remaining} visits remaining this year`,
+          badge: `${roData.serviceUsage.remaining} Left`,
+        };
+      }
+      return type;
+    });
+  }, [roData]);
+
+  const selectedService = dynamicServiceTypes.find(s => s.id === payload.serviceType);
   const selectedSlot = TIME_SLOTS.find(s => s.id === payload.preferredSlot);
   const selectedDate = dates.find(d => d.full === payload.preferredDate);
 
@@ -276,7 +297,7 @@ export default function BookServiceScreen() {
                 <p className="text-[18px] font-black text-slate-800 mb-1">Service Type</p>
                 <p className="text-slate-500 text-[13px] mb-5">Choose how you'd like to proceed</p>
                 <div className="space-y-3">
-                  {SERVICE_TYPES.map((type) => {
+                  {dynamicServiceTypes.map((type) => {
                     const active = payload.serviceType === type.id;
                     return (
                       <button
