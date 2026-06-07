@@ -96,6 +96,15 @@ export default function TicketDetailScreen() {
                 </div>
               </div>
             )}
+            <div className="mt-4 flex justify-end relative z-10">
+              <button 
+                onClick={() => alert("Downloading Invoice...")}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-widest shadow-md transition-all active:scale-95 flex items-center gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                Download Invoice
+              </button>
+            </div>
           </motion.div>
         )}
 

@@ -14,15 +14,37 @@ export interface TicketResponse {
 }
 
 export const createTicket = async (payload: CreateTicketPayload): Promise<TicketResponse> => {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-  
-  // Simulate random failure for error state demonstration
-  // if (Math.random() < 0.1) throw new Error("Network error");
-  
-  return {
-    ticketId: `TKT-${Math.floor(1000 + Math.random() * 9000)}`,
-    expectedResponseTime: "Within 2 Hours",
-    status: "CREATED"
-  };
+  if (typeof window === "undefined") throw new Error("Window not defined");
+  const stored = localStorage.getItem("customer_profile");
+  if (!stored) throw new Error("No customer profile found");
+  const parsed = JSON.parse(stored);
+
+  try {
+    const res = await fetch("http://localhost:3000/api/appointments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerName: parsed.name,
+        customerPhone: parsed.phone,
+        address: parsed.address || "No Address Provided",
+        type: payload.issueType,
+        date: payload.preferredDate,
+        time: payload.preferredSlot,
+        status: "Pending",
+        remarks: payload.notes
+      })
+    });
+
+    if (!res.ok) throw new Error("Failed to create appointment on backend");
+    
+    const data = await res.json();
+    return {
+      ticketId: data.id,
+      expectedResponseTime: "Within 2 Hours",
+      status: "CREATED"
+    };
+  } catch (err) {
+    console.error("Error creating ticket:", err);
+    throw err;
+  }
 };

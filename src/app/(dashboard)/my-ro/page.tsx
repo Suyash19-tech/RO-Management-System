@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 import { fetchMyRODetails, ROUnitDetails } from "@/lib/api/ro-unit";
+import { FileText } from "lucide-react";
 
 import { ROHeroCard } from "@/components/my-ro/ROHeroCard";
 import { ROCareBreakdown } from "@/components/my-ro/ROCareBreakdown";
@@ -66,6 +67,16 @@ export default function MyROScreen() {
 
           <motion.div variants={item}>
             <ServiceUsageCard usage={data!.serviceUsage} />
+          </motion.div>
+
+          <motion.div variants={item} className="px-1 mt-4">
+            <button 
+              onClick={() => alert("Downloading Original RO Invoice...")}
+              className="w-full bg-white border border-[#0F4C81]/20 hover:border-[#0F4C81] text-[#0F4C81] font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
+            >
+              <FileText className="w-5 h-5" />
+              <span className="uppercase tracking-widest text-xs">Download Original Invoice</span>
+            </button>
           </motion.div>
 
         </motion.div>

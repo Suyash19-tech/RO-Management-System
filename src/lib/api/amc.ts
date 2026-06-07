@@ -52,28 +52,42 @@ export const fetchAMCPlans = async (): Promise<AMCPlan[]> => {
 };
 
 export const fetchMyAMC = async (): Promise<AMCSubscription | null> => {
-  await new Promise((resolve) => setTimeout(resolve, 1200));
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem("customer_profile");
+  if (!stored) return null;
+  const parsed = JSON.parse(stored);
   
-  // Return null to test empty state. For now, returning active state.
+  const activeAmc = parsed.amcs?.find((a: any) => a.status === 'Active' || a.status === 'ACTIVE');
+  if (!activeAmc) return null;
+
+  const expiry = new Date(activeAmc.endDate);
+  const now = new Date();
+  const daysRemaining = Math.max(0, Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+
+  let status: "ACTIVE" | "EXPIRING_SOON" | "EXPIRED" = "ACTIVE";
+  if (daysRemaining === 0) status = "EXPIRED";
+  else if (daysRemaining <= 30) status = "EXPIRING_SOON";
+
   return {
-    id: "sub_01",
-    planId: "gold",
-    planName: "Comprehensive Gold",
-    status: "ACTIVE",
-    expiryDate: new Date(Date.now() + 86400000 * 35).toISOString(), // 35 days left
-    daysRemaining: 35,
+    id: activeAmc.id,
+    planId: "dynamic",
+    planName: activeAmc.plan || "Standard Plan",
+    status,
+    expiryDate: activeAmc.endDate,
+    daysRemaining,
     benefits: [
-      "3 Free Services",
-      "Membrane Included",
-      "Priority Support",
-      "15% Parts Discount"
+      "Standard Servicing",
+      "Priority Customer Support"
     ],
     usage: {
-      allocated: 3,
-      used: 2
+      allocated: 3, // Fallback if not tracked on amc record
+      used: parsed.appointments?.filter((a: any) => a.status === 'COMPLETED').length || 0
     },
-    history: [
-      { id: "h1", type: "PURCHASED", date: new Date(Date.now() - 86400000 * 330).toISOString(), description: "Purchased 1-year Comprehensive Gold AMC." }
-    ]
+    history: parsed.amcs?.map((a: any) => ({
+      id: a.id,
+      type: a.status === "EXPIRED" ? "EXPIRED" : "PURCHASED",
+      date: a.startDate,
+      description: `${a.status === "EXPIRED" ? "Expired" : "Purchased"} ${a.plan} plan.`
+    })) || []
   };
 };
