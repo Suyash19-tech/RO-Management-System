@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import * as THREE from "three";
 import { ArrowRight, User, MapPin } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/Buttons";
 import { PhoneInput, TextInput, TextAreaInput } from "@/components/ui/Inputs";
@@ -50,6 +51,41 @@ export default function LoginScreen() {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const vantaRef = useRef<HTMLDivElement>(null);
+  const [vantaEffect, setVantaEffect] = useState<any>(0);
+
+  useEffect(() => {
+    const initVanta = async () => {
+      try {
+        const WAVES = (await import("vanta/dist/vanta.waves.min")).default;
+        if (!vantaEffect && vantaRef.current) {
+          setVantaEffect(
+            WAVES({
+              el: vantaRef.current,
+              THREE: THREE,
+              mouseControls: true,
+              touchControls: true,
+              gyroControls: false,
+              minHeight: 200.00,
+              minWidth: 200.00,
+              scale: 1.00,
+              scaleMobile: 1.00,
+              color: 0x4a79b3,
+              waveHeight: 15.50,
+              waveSpeed: 1.10
+            })
+          );
+        }
+      } catch (err) {
+        console.error("Vanta failed to load:", err);
+      }
+    };
+    initVanta();
+    
+    return () => {
+      if (vantaEffect) vantaEffect.destroy();
+    };
+  }, [vantaEffect]);
 
   const handleLogin = async () => {
     if (phone.length === 10) {
@@ -87,18 +123,8 @@ export default function LoginScreen() {
   return (
     <div className="flex-1 flex flex-col bg-slate-50 h-full relative overflow-y-auto">
       {/* Hero Section with Water Visual & Mascot */}
-      <div className="relative h-64 bg-[#0F4C81] flex flex-col items-center justify-end pb-8 rounded-b-[2.5rem] shadow-xl overflow-hidden shrink-0">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-40 mix-blend-luminosity">
-          <img 
-            src="/login.png" 
-            alt="Login Banner" 
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = "https://images.unsplash.com/photo-1548848221-0c2e497ed557?q=80&w=1000&auto=format&fit=crop";
-            }}
-          />
-        </div>
+      <div ref={vantaRef} className="relative h-64 bg-[#0F4C81] flex flex-col items-center justify-end pb-8 rounded-b-[2.5rem] shadow-xl overflow-hidden shrink-0">
+
         
         {/* Glassmorphic overlay for depth */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0F4C81] via-transparent to-transparent opacity-90" />

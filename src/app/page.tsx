@@ -1,21 +1,56 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import * as THREE from "three";
 
 export default function SplashScreen() {
   const router = useRouter();
+  const vantaRef = useRef<HTMLDivElement>(null);
+  const [vantaEffect, setVantaEffect] = useState<any>(0);
 
   useEffect(() => {
+    // Dynamically load vanta to prevent SSR issues
+    const initVanta = async () => {
+      try {
+        const WAVES = (await import("vanta/dist/vanta.waves.min")).default;
+        if (!vantaEffect && vantaRef.current) {
+          setVantaEffect(
+            WAVES({
+              el: vantaRef.current,
+              THREE: THREE,
+              mouseControls: true,
+              touchControls: true,
+              gyroControls: false,
+              minHeight: 200.00,
+              minWidth: 200.00,
+              scale: 1.00,
+              scaleMobile: 1.00,
+              color: 0x4a79b3,
+              waveHeight: 15.50,
+              waveSpeed: 1.10
+            })
+          );
+        }
+      } catch (err) {
+        console.error("Vanta failed to load:", err);
+      }
+    };
+    initVanta();
+    
     const timer = setTimeout(() => {
       router.push("/login");
     }, 2500);
-    return () => clearTimeout(timer);
-  }, [router]);
+    
+    return () => {
+      clearTimeout(timer);
+      if (vantaEffect) vantaEffect.destroy();
+    };
+  }, [router, vantaEffect]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F4C81] to-[#0a355c] h-full relative overflow-hidden">
+    <div ref={vantaRef} className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F4C81] to-[#0a355c] h-[100dvh] relative overflow-hidden">
       <motion.div 
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -23,24 +58,6 @@ export default function SplashScreen() {
         className="flex flex-col items-center z-10 w-full"
       >
         <div className="relative mb-10 flex items-center justify-center">
-          {/* Subtle Water Ripples (Oscillating Waves) */}
-          <div className="absolute flex items-center justify-center pointer-events-none z-0">
-            {[0, 1, 2, 3].map((i) => (
-              <motion.div 
-                key={i}
-                initial={{ scale: 0.95, opacity: 0.7 }}
-                animate={{ scale: 2.5, opacity: 0 }}
-                transition={{ 
-                  duration: 3, 
-                  repeat: Infinity, 
-                  ease: "easeOut",
-                  delay: i * 0.75 
-                }}
-                className="w-56 h-56 border-2 border-white/40 rounded-full absolute"
-              />
-            ))}
-          </div>
-
           {/* Mascot / Logo Image as a Perfect Circle */}
           <div className="w-56 h-56 relative z-10 flex items-center justify-center rounded-full bg-white overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.15)]">
             <img 
