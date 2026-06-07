@@ -89,14 +89,7 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
           <Menu className="w-6 h-6" />
         </button>
         
-        <div className="relative max-w-md w-full hidden sm:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input 
-            type="text" 
-            placeholder="Search customers, orders, services..." 
-            className="w-full pl-10 pr-4 py-2 bg-slate-100 border-transparent rounded-lg text-sm focus:bg-white focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition-all outline-none"
-          />
-        </div>
+
       </div>
 
       <div className="flex items-center gap-5">
