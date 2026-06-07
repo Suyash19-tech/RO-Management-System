@@ -18,7 +18,7 @@ export default function InstallationsPage() {
   const [amcOptions, setAmcOptions] = useState<ProductOption[]>([]);
   const [equipmentOptions, setEquipmentOptions] = useState<ProductOption[]>([]);
 
-  useEffect(() => {
+  const fetchOptions = () => {
     fetch('/api/form-options')
       .then(res => res.json())
       .then(data => {
@@ -27,6 +27,10 @@ export default function InstallationsPage() {
         setEquipmentOptions(data.equipments ? data.equipments.map((e: any) => ({ name: e.item, price: e.price })) : []);
       })
       .catch(console.error);
+  };
+
+  useEffect(() => {
+    fetchOptions();
   }, []);
 
   // Form State
@@ -160,7 +164,12 @@ export default function InstallationsPage() {
 
       if (form.generateInvoice) {
          console.log("Invoice Generation Triggered for:", form.name);
-         alert(`Customer Onboarded! Invoice for ₹${grandTotal.toFixed(2)} generated.`);
+         const paidAmt = form.amountPaid || grandTotal;
+         const dueAmt = Math.max(0, grandTotal - paidAmt);
+         const msg = dueAmt > 0
+           ? `Customer Onboarded! ₹${paidAmt.toFixed(2)} collected. Balance due: ₹${dueAmt.toFixed(2)}`
+           : `Customer Onboarded! Full payment of ₹${paidAmt.toFixed(2)} collected.`;
+         alert(msg);
       }
 
       // Reset form
@@ -175,6 +184,7 @@ export default function InstallationsPage() {
       setIsModalOpen(false);
       setCurrentStep(1);
       setRefreshKey(prev => prev + 1);
+      fetchOptions();
     } catch (err) {
       console.error(err);
       alert("Failed to onboard customer.");

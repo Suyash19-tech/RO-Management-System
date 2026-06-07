@@ -31,16 +31,97 @@ export async function GET() {
     await prisma.product.createMany({
       data: [
         // RO Machines
-        { name: 'SardarJi Classic RO', sku: 'SRO-CLS-01', category: 'Domestic RO', price: 12500, status: 'Published' },
-        { name: 'SardarJi Premium RO', sku: 'SRO-PRM-02', category: 'Domestic RO', price: 16500, status: 'Published' },
-        { name: 'Pure Water RO Max', sku: 'PWR-MAX-01', category: 'Commercial RO', price: 24000, status: 'Published' },
-        { name: 'Alkaline Copper Filter', sku: 'FLT-ALK-01', category: 'Accessories', price: 1200, status: 'Draft' },
-        { name: 'SardarJi Eco Water Purifier', sku: 'SRO-ECO-03', category: 'Domestic RO', price: 9500, status: 'Published' },
-        { name: 'Heavy Duty 50LPH RO', sku: 'COM-50L-01', category: 'Commercial RO', price: 35000, status: 'Archived' },
+        { 
+          name: 'SardarJi Classic RO', 
+          sku: 'SRO-CLS-01', 
+          category: 'Domestic RO', 
+          price: 12500, 
+          purchasePrice: 8500,
+          stock: 18,
+          image: 'https://images.unsplash.com/photo-1618506469810-2fc2a1d86b3f?w=300&q=80',
+          status: 'Active' 
+        },
+        { 
+          name: 'SardarJi Premium RO', 
+          sku: 'SRO-PRM-02', 
+          category: 'Domestic RO', 
+          price: 16500, 
+          purchasePrice: 11000,
+          stock: 12,
+          image: 'https://images.unsplash.com/photo-1585338107529-13afc5f02586?w=300&q=80',
+          status: 'Active' 
+        },
+        { 
+          name: 'Pure Water RO Max', 
+          sku: 'PWR-MAX-01', 
+          category: 'Commercial RO', 
+          price: 24000, 
+          purchasePrice: 17500,
+          stock: 5,
+          image: 'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=300&q=80',
+          status: 'Active' 
+        },
+        { 
+          name: 'Alkaline Copper Filter', 
+          sku: 'FLT-ALK-01', 
+          category: 'Accessories', 
+          price: 1200, 
+          purchasePrice: 750,
+          stock: 45,
+          image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=300&q=80',
+          status: 'Active' 
+        },
+        { 
+          name: 'SardarJi Eco Water Purifier', 
+          sku: 'SRO-ECO-03', 
+          category: 'Domestic RO', 
+          price: 9500, 
+          purchasePrice: 6500,
+          stock: 22,
+          image: 'https://images.unsplash.com/photo-1508962914676-134849a727f0?w=300&q=80',
+          status: 'Active' 
+        },
+        { 
+          name: 'Heavy Duty 50LPH RO', 
+          sku: 'COM-50L-01', 
+          category: 'Commercial RO', 
+          price: 35000, 
+          purchasePrice: 26000,
+          stock: 2,
+          image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=300&q=80',
+          status: 'Discontinued' 
+        },
         // AMC Plans
-        { name: 'Basic 1-Year AMC', sku: 'AMC-BSC-1Y', category: 'AMC Plan', price: 1500, status: 'Published' },
-        { name: 'Premium 1-Year AMC', sku: 'AMC-PRM-1Y', category: 'AMC Plan', price: 2500, status: 'Published' },
-        { name: 'Standard 2-Year AMC', sku: 'AMC-STD-2Y', category: 'AMC Plan', price: 3000, status: 'Published' },
+        { 
+          name: 'Basic 1-Year AMC', 
+          sku: 'AMC-BSC-1Y', 
+          category: 'AMC Plan', 
+          price: 1500, 
+          purchasePrice: 500,
+          stock: 999, // AMC plans have unlimited or high stock
+          image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300&q=80',
+          status: 'Active' 
+        },
+        { 
+          name: 'Premium 1-Year AMC', 
+          sku: 'AMC-PRM-1Y', 
+          category: 'AMC Plan', 
+          price: 2500, 
+          purchasePrice: 800,
+          stock: 999,
+          image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300&q=80',
+          status: 'Active' 
+        },
+        { 
+          name: 'Standard 2-Year AMC', 
+          sku: 'AMC-STD-2Y', 
+          category: 'AMC Plan', 
+          price: 3000, 
+          purchasePrice: 1000,
+          stock: 999,
+          image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300&q=80',
+          status: 'Active' 
+        },
       ],
     });
 
@@ -58,12 +139,12 @@ export async function GET() {
     // Create AMC contracts
     await prisma.amc.createMany({
       data: [
-        { id: 'AMC-5091', customerName: 'Priya Verma', customerPhone: '+91 98765 11111', address: 'Vasant Kunj, New Delhi', plan: 'Premium 1-Year AMC', startDate: new Date('2024-01-10'), endDate: new Date('2025-01-09'), status: 'Active', payment: 'Paid' },
-        { id: 'AMC-5092', customerName: 'Rahul Sharma', customerPhone: '+91 98765 43210', address: 'Sector 14, Gurugram', plan: 'Standard 2-Year AMC', startDate: new Date('2022-06-15'), endDate: new Date('2024-06-14'), status: 'Expiring Soon', payment: 'Paid' },
-        { id: 'AMC-5093', customerName: 'Sunil Yadav', customerPhone: '+91 98765 33333', address: 'Rohini Sector 7, Delhi', plan: 'Basic 1-Year AMC', startDate: new Date('2023-05-05'), endDate: new Date('2024-05-04'), status: 'Expired', payment: 'Pending' },
-        { id: 'AMC-5094', customerName: 'Neha Singh', customerPhone: '+91 98765 55555', address: 'Noida Sector 62, UP', plan: 'Premium 1-Year AMC', startDate: new Date('2024-05-20'), endDate: new Date('2025-05-19'), status: 'Active', payment: 'Paid' },
-        { id: 'AMC-5095', customerName: 'Amit Kumar', customerPhone: '+91 98765 44444', address: 'Indirapuram, Ghaziabad', plan: 'Standard 1-Year AMC', startDate: new Date('2023-07-01'), endDate: new Date('2024-06-30'), status: 'Expiring Soon', payment: 'Paid' },
-        { id: 'AMC-5096', customerName: 'Vikash Patel', customerPhone: '+91 98765 22222', address: 'DLF Phase 3, Gurugram', plan: 'Basic 2-Year AMC', startDate: new Date('2022-04-12'), endDate: new Date('2024-04-11'), status: 'Expired', payment: 'Paid' },
+        { id: 'AMC-5091', customerName: 'Priya Verma', customerPhone: '+91 98765 11111', address: 'Vasant Kunj, New Delhi', plan: 'Premium 1-Year AMC', startDate: new Date('2024-01-10'), endDate: new Date('2025-01-09'), status: 'Active', payment: 'Paid', totalAmount: 2500, amountPaid: 2500, balanceDue: 0 },
+        { id: 'AMC-5092', customerName: 'Rahul Sharma', customerPhone: '+91 98765 43210', address: 'Sector 14, Gurugram', plan: 'Standard 2-Year AMC', startDate: new Date('2022-06-15'), endDate: new Date('2024-06-14'), status: 'Expiring Soon', payment: 'Paid', totalAmount: 3000, amountPaid: 3000, balanceDue: 0 },
+        { id: 'AMC-5093', customerName: 'Sunil Yadav', customerPhone: '+91 98765 33333', address: 'Rohini Sector 7, Delhi', plan: 'Basic 1-Year AMC', startDate: new Date('2023-05-05'), endDate: new Date('2024-05-04'), status: 'Expired', payment: 'Pending', totalAmount: 1500, amountPaid: 0, balanceDue: 1500 },
+        { id: 'AMC-5094', customerName: 'Neha Singh', customerPhone: '+91 98765 55555', address: 'Noida Sector 62, UP', plan: 'Premium 1-Year AMC', startDate: new Date('2024-05-20'), endDate: new Date('2025-05-19'), status: 'Active', payment: 'Paid', totalAmount: 2500, amountPaid: 2500, balanceDue: 0 },
+        { id: 'AMC-5095', customerName: 'Amit Kumar', customerPhone: '+91 98765 44444', address: 'Indirapuram, Ghaziabad', plan: 'Standard 1-Year AMC', startDate: new Date('2023-07-01'), endDate: new Date('2024-06-30'), status: 'Expiring Soon', payment: 'Paid', totalAmount: 2000, amountPaid: 2000, balanceDue: 0 },
+        { id: 'AMC-5096', customerName: 'Vikash Patel', customerPhone: '+91 98765 22222', address: 'DLF Phase 3, Gurugram', plan: 'Basic 2-Year AMC', startDate: new Date('2022-04-12'), endDate: new Date('2024-04-11'), status: 'Expired', payment: 'Paid', totalAmount: 2000, amountPaid: 2000, balanceDue: 0 },
       ],
     });
 

@@ -52,6 +52,7 @@ export function ServicesTable() {
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [technicians, setTechnicians] = useState<{ id: string; name: string; status: string }[]>([]);
   
   const [selectedApt, setSelectedApt] = useState<Appointment | null>(null);
   const [customerDetails, setCustomerDetails] = useState<any>(null);
@@ -79,8 +80,21 @@ export function ServicesTable() {
     }
   };
 
+  const fetchTechnicians = async () => {
+    try {
+      const res = await fetch('/api/technicians');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setTechnicians(data);
+      }
+    } catch (err) {
+      console.error("Failed to load technicians for assignment list:", err);
+    }
+  };
+
   useEffect(() => {
     fetchAppointments();
+    fetchTechnicians();
   }, []);
 
   // Fetch Customer Details when Modal Opens
@@ -311,10 +325,11 @@ export function ServicesTable() {
                       className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:bg-white focus:border-[#2563EB] outline-none"
                     >
                       <option value="Unassigned">Unassigned</option>
-                      <option value="Suresh Prajapati">Suresh Prajapati</option>
-                      <option value="Arjun Singh">Arjun Singh</option>
-                      <option value="Ravi Kumar">Ravi Kumar</option>
-                      <option value="Mohit Yadav">Mohit Yadav</option>
+                      {technicians.map((tech) => (
+                        <option key={tech.id} value={tech.name}>
+                          {tech.name} {tech.status === "Off Duty" ? "(Off Duty)" : ""}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>

@@ -31,14 +31,18 @@ model Customer {
 }
 
 model Product {
-  id        String   @id @default(cuid())
-  name      String
-  sku       String   @unique
-  category  String
-  price     Float
-  status    String   @default("Published") // Published, Draft, Archived
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  sku           String?  @unique
+  category      String
+  price         Float    // Selling Price
+  purchasePrice Float    @default(0)
+  stock         Int      @default(0)
+  threshold     Int      @default(5)  // low stock alert below this number
+  image         String?
+  status        String   @default("Active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Lead {
@@ -64,6 +68,9 @@ model Amc {
   endDate       DateTime
   status        String    @default("Active") // Active, Expiring Soon, Expired
   payment       String    @default("Paid")   // Paid, Pending
+  totalAmount   Float     @default(0)
+  amountPaid    Float     @default(0)
+  balanceDue    Float     @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -138,4 +145,25 @@ model Technician {
   activeJobs Int      @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  date        DateTime @default(now())
+  category    String   // "Inventory Purchase", "Fuel & Travel", "Salary", "Rent", "Marketing", "Other"
+  description String
+  amount      Float    // Total expense amount
+  amountPaid  Float    @default(0) // Money given (total money given)
+  balanceDue  Float    @default(0) // Remaining balance
+  status      String   @default("Paid") // Paid, Partially Paid, Unpaid
+  vendor      String?  // Supplier/Vendor name
+  loggedBy    String   @default("Admin")
+  
+  // Specific to Inventory Purchase
+  productId   String?
+  productName String?
+  quantity    Int?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Edit2, FileText, User, MapPin, Phone, Calendar, Shield, Settings, Wrench, ChevronRight, Printer, X, Download } from "lucide-react";
 import Link from "next/link";
+import { InvoiceView, type Appointment } from "@/components/dashboard/AppointmentsTable";
+import { AmcInvoiceView } from "@/components/dashboard/AMCTable";
 
 type ProfileData = {
   id: string;
@@ -37,6 +39,8 @@ export default function CustomerProfilePage() {
 
   // Invoice Modal State
   const [invoiceInst, setInvoiceInst] = useState<any>(null); // The installation to invoice
+  const [invoiceApt, setInvoiceApt] = useState<Appointment | null>(null);
+  const [invoiceAmc, setInvoiceAmc] = useState<any>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -249,11 +253,16 @@ export default function CustomerProfilePage() {
                     <div className="p-4 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <h4 className="font-extrabold text-slate-900">{inst.model}</h4>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${inst.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                             {inst.status}
                           </span>
                           <span className="text-xs text-slate-500 font-medium">Installed: {new Date(inst.date).toLocaleDateString()}</span>
+                          {inst.servicesCount !== undefined && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                              {inst.servicesCount} Free Services Left
+                            </span>
+                          )}
                         </div>
                       </div>
                       <button 
@@ -306,19 +315,32 @@ export default function CustomerProfilePage() {
                         <h4 className="font-bold text-slate-900">{amc.plan}</h4>
                         <p className="text-sm text-slate-500 mt-0.5">ID: {amc.id}</p>
                       </div>
-                      <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${amc.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : amc.status === 'Expired' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
-                        {amc.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${amc.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : amc.status === 'Expired' ? 'bg-rose-100 text-rose-700' : amc.status === 'Renewed' ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-amber-100 text-amber-700'}`}>
+                          {amc.status}
+                        </span>
+                        <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${amc.payment === 'Paid' ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-rose-50 border border-rose-200 text-rose-700'}`}>
+                          {amc.payment}
+                        </span>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm mt-2">
-                      <div>
-                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Issue Date</p>
-                        <p className="font-medium text-slate-900 mt-0.5">{new Date(amc.startDate).toLocaleDateString()}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
+                      <div className="grid grid-cols-2 gap-4 text-sm flex-1">
+                        <div>
+                          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Issue Date</p>
+                          <p className="font-medium text-slate-900 mt-0.5">{new Date(amc.startDate).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Expiry Date</p>
+                          <p className="font-medium text-slate-900 mt-0.5">{new Date(amc.endDate).toLocaleDateString()}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Expiry Date</p>
-                        <p className="font-medium text-slate-900 mt-0.5">{new Date(amc.endDate).toLocaleDateString()}</p>
-                      </div>
+                      <button 
+                        onClick={() => setInvoiceAmc(amc)}
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-lg border border-slate-200 transition-colors flex items-center gap-1.5 shrink-0"
+                      >
+                        <FileText className="w-3.5 h-3.5" /> View Invoice
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -352,9 +374,19 @@ export default function CustomerProfilePage() {
                         <td className="py-3 font-medium">{apt.type}</td>
                         <td className="py-3">{apt.tech}</td>
                         <td className="py-3 text-right">
-                          <span className={`text-xs font-bold ${apt.status === 'Completed' ? 'text-emerald-600' : apt.status === 'Scheduled' ? 'text-[#2563EB]' : 'text-slate-500'}`}>
-                            {apt.status}
-                          </span>
+                          <div className="flex items-center justify-end gap-3">
+                            <span className={`text-xs font-bold ${apt.status === 'Completed' ? 'text-emerald-600' : apt.status === 'Scheduled' ? 'text-[#2563EB]' : 'text-slate-500'}`}>
+                              {apt.status}
+                            </span>
+                            {apt.status === 'Completed' && (
+                              <button 
+                                onClick={() => setInvoiceApt(apt as Appointment)}
+                                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded flex items-center gap-1 transition-colors"
+                              >
+                                <FileText className="w-3 h-3" /> Invoice
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -585,6 +617,16 @@ export default function CustomerProfilePage() {
         </div>
       )}
 
+      {invoiceApt && <InvoiceView apt={invoiceApt} onClose={() => setInvoiceApt(null)} />}
+      {invoiceAmc && (
+        <AmcInvoiceView 
+          amc={invoiceAmc} 
+          onClose={() => setInvoiceAmc(null)} 
+          onUpdate={() => {
+            fetchProfile();
+          }} 
+        />
+      )}
     </div>
   );
 }

@@ -5,6 +5,16 @@ export async function GET() {
   try {
     const appointments = await prisma.appointment.findMany({
       orderBy: { createdAt: 'desc' },
+      include: {
+        customer: {
+          include: {
+            installations: {
+              orderBy: { createdAt: 'desc' },
+              take: 1
+            }
+          }
+        }
+      }
     });
     return NextResponse.json(appointments);
   } catch (error) {
@@ -20,6 +30,7 @@ export async function POST(request: Request) {
       data: {
         id: data.id,
         customerName: data.customerName,
+        customerPhone: data.customerPhone,
         address: data.address,
         type: data.type,
         tech: data.tech || 'Unassigned',

@@ -8,10 +8,11 @@ import {
   ChevronRight, ChevronLeft, Phone, Search
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 /* ─────────────── Types ─────────────── */
 type LineItem = { name: string; qty: number; cost: number };
-type Appointment = {
+export type Appointment = {
   id: string;
   customerName: string;
   customerPhone: string | null;
@@ -27,6 +28,7 @@ type Appointment = {
   itemsUsed?: string | null;
   costCharged?: number | null;
   paymentStatus?: string | null;
+  customer?: { installations: { servicesCount: number }[] } | null;
 };
 
 /* ─────────────── Helpers ─────────────── */
@@ -64,7 +66,7 @@ function fmt(d?: string | null) {
 /* ═══════════════════════════════════════════════════
    PROFESSIONAL INVOICE
 ═══════════════════════════════════════════════════ */
-function InvoiceView({ apt, onClose }: { apt: Appointment; onClose: () => void }) {
+export function InvoiceView({ apt, onClose }: { apt: Appointment; onClose: () => void }) {
   const items: LineItem[] = (() => { try { return apt.itemsUsed ? JSON.parse(apt.itemsUsed) : []; } catch { return []; } })();
   const total = apt.costCharged ?? 0;
   const invoiceNo = `SVC-${apt.id.slice(-8).toUpperCase()}-${new Date(apt.completedAt || apt.date).getFullYear()}`;
@@ -214,6 +216,22 @@ function CompletionWizard({
   const [paymentStatus, setPaymentStatus] = useState<"Paid" | "Unpaid" | "Free">((apt.paymentStatus as any) || "Unpaid");
   const [saving, setSaving] = useState(false);
   const [completedApt, setCompletedApt] = useState<Appointment | null>(null);
+  const [availableProducts, setAvailableProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          // Filter to only active, non-AMC products with stock > 0
+          const filtered = data.filter(
+            (p) => p.status === "Active" && p.category !== "AMC Plan" && p.stock > 0
+          );
+          setAvailableProducts(filtered);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch products:", err));
+  }, []);
 
   const totalCost = items.reduce((s, i) => s + i.cost * i.qty, 0);
 
@@ -362,8 +380,47 @@ function CompletionWizard({
                   </div>
                   {items.map((item, idx) => (
                     <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-slate-50 rounded-xl p-2 border border-slate-200">
-                      <input className="col-span-6 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-[#2563EB]" value={item.name} placeholder="e.g. RO Membrane" onChange={(e) => updateItem(idx, "name", e.target.value)} />
-                      <input type="number" className="col-span-2 px-2 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-[#2563EB] text-center" value={item.qty} min={1} onChange={(e) => updateItem(idx, "qty", e.target.value)} />
+                      <select
+                        className="col-span-6 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-[#2563EB] cursor-pointer text-slate-800"
+                        value={item.name}
+                        onChange={(e) => {
+                          const selectedName = e.target.value;
+                          updateItem(idx, "name", selectedName);
+                          const prod = availableProducts.find(p => p.name === selectedName);
+                          if (prod) {
+                            updateItem(idx, "cost", prod.price);
+                            if (item.qty > prod.stock) {
+                              updateItem(idx, "qty", prod.stock);
+                            }
+                          }
+                        }}
+                      >
+                        <option value="" disabled>-- Select Part --</option>
+                        {item.name && !availableProducts.some(p => p.name === item.name) && (
+                          <option value={item.name}>{item.name} (Out of Stock / Pre-filled)</option>
+                        )}
+                        {availableProducts.map((p) => (
+                          <option key={p.id} value={p.name}>
+                            {p.name} (Stock: {p.stock}, ₹{p.price})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        className="col-span-2 px-2 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-[#2563EB] text-center"
+                        value={item.qty}
+                        min={1}
+                        max={(() => {
+                          const prod = availableProducts.find(p => p.name === item.name);
+                          return prod ? prod.stock : undefined;
+                        })()}
+                        onChange={(e) => {
+                          const val = Math.max(1, parseInt(e.target.value) || 1);
+                          const prod = availableProducts.find(p => p.name === item.name);
+                          const maxVal = prod ? prod.stock : Infinity;
+                          updateItem(idx, "qty", Math.min(val, maxVal));
+                        }}
+                      />
                       <input type="number" className="col-span-3 px-2 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-[#2563EB] text-right" value={item.cost} min={0} placeholder="0" onChange={(e) => updateItem(idx, "cost", e.target.value)} />
                       <button onClick={() => removeItem(idx)} className="col-span-1 flex items-center justify-center text-slate-300 hover:text-rose-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
                     </div>
@@ -515,6 +572,7 @@ function CompletionWizard({
 ═══════════════════════════════════════════════════ */
 export function AppointmentsTable() {
   const [all, setAll] = useState<Appointment[]>([]);
+  const [technicians, setTechnicians] = useState<{ id: string; name: string; status: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"active" | "completed">("active");
   const [payFilter, setPayFilter] = useState<"all" | "Paid" | "Unpaid" | "Free">("all");
@@ -524,9 +582,14 @@ export function AppointmentsTable() {
 
   const fetchAll = async () => {
     try {
-      const res = await fetch("/api/appointments");
-      const data = await res.json();
-      setAll(Array.isArray(data) ? data : []);
+      const [appRes, techRes] = await Promise.all([
+        fetch("/api/appointments"),
+        fetch("/api/technicians")
+      ]);
+      const appData = await appRes.json();
+      const techData = await techRes.json();
+      setAll(Array.isArray(appData) ? appData : []);
+      setTechnicians(Array.isArray(techData) ? techData.filter((t: any) => t.status === "On Duty") : []);
     } catch { /**/ } finally { setLoading(false); }
   };
   useEffect(() => { fetchAll(); }, []);
@@ -544,6 +607,20 @@ export function AppointmentsTable() {
   );
 
   const handleDone = () => { fetchAll(); setTab("completed"); };
+
+  const handleAssignTech = async (id: string, techName: string) => {
+    try {
+      await fetch(`/api/appointments/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tech: techName })
+      });
+      fetchAll();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to assign technician");
+    }
+  };
 
   if (loading) return <div className="p-12 text-center text-slate-500 font-medium animate-pulse">Loading appointments...</div>;
 
@@ -612,10 +689,25 @@ export function AppointmentsTable() {
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <Avatar name={apt.customerName} />
                         <div className="min-w-0">
-                          <h3 className="font-bold text-slate-900 group-hover:text-[#2563EB] transition-colors">{apt.customerName}</h3>
-                          <div className="flex items-center gap-1 text-slate-500 mt-0.5">
-                            <MapPin className="w-3 h-3 shrink-0" />
-                            <p className="text-xs font-medium line-clamp-1">{apt.address}</p>
+                          {apt.customerPhone ? (
+                            <Link href={`/dashboard/customers/${encodeURIComponent(apt.customerPhone)}`} onClick={(e) => e.stopPropagation()}>
+                              <h3 className="font-bold text-slate-900 group-hover:text-[#2563EB] hover:underline transition-colors">{apt.customerName}</h3>
+                            </Link>
+                          ) : (
+                            <h3 className="font-bold text-slate-900 group-hover:text-[#2563EB] transition-colors">{apt.customerName}</h3>
+                          )}
+                          <div className="flex flex-col mt-1 gap-1">
+                            <div className="flex items-center gap-1 text-slate-500">
+                              <MapPin className="w-3 h-3 shrink-0" />
+                              <p className="text-xs font-medium line-clamp-1">{apt.address}</p>
+                            </div>
+                            {apt.customer?.installations?.[0] !== undefined && (
+                              <div className="flex items-center mt-0.5">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                  {apt.customer.installations[0].servicesCount} Services Left
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -631,9 +723,19 @@ export function AppointmentsTable() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between border-t border-slate-200 pt-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 relative group">
                         <Avatar name={apt.tech} size="sm" />
-                        <span className={`text-sm font-semibold ${apt.tech === "Unassigned" ? "text-amber-600" : "text-slate-700"}`}>{apt.tech}</span>
+                        <select
+                          value={apt.tech}
+                          onChange={(e) => handleAssignTech(apt.id, e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          className={`text-sm font-semibold bg-transparent outline-none appearance-none cursor-pointer hover:underline ${apt.tech === "Unassigned" ? "text-amber-600" : "text-slate-700"}`}
+                        >
+                          <option value="Unassigned">Unassigned</option>
+                          {technicians.map(t => (
+                            <option key={t.id} value={t.name}>{t.name}</option>
+                          ))}
+                        </select>
                       </div>
                       <div className="flex items-center gap-1 text-[#2563EB] text-xs font-bold">
                         Mark Done <ChevronRight className="w-4 h-4" />
@@ -666,7 +768,13 @@ export function AppointmentsTable() {
                         <Avatar name={apt.customerName} />
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                            <h3 className="font-bold text-slate-900 text-sm">{apt.customerName}</h3>
+                            {apt.customerPhone ? (
+                              <Link href={`/dashboard/customers/${encodeURIComponent(apt.customerPhone)}`} onClick={(e) => e.stopPropagation()}>
+                                <h3 className="font-bold text-slate-900 text-sm hover:text-[#2563EB] hover:underline transition-colors">{apt.customerName}</h3>
+                              </Link>
+                            ) : (
+                              <h3 className="font-bold text-slate-900 text-sm">{apt.customerName}</h3>
+                            )}
                             <TypePill type={apt.type} />
                           </div>
                           <div className="flex items-center gap-1 text-slate-500">

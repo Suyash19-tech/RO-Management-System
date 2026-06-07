@@ -60,26 +60,50 @@ function StatusBadge({ status }: { status: string }) {
 export function InstallationsTable({ searchTerm = "" }: { searchTerm?: string }) {
   const router = useRouter();
   const [installations, setInstallations] = useState<Installation[]>([]);
+  const [technicians, setTechnicians] = useState<{ id: string; name: string; status: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   const filteredInstallations = installations.filter(item => 
     item.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.address.toLowerCase().includes(searchTerm.toLowerCase())
+    item.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.tech.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const fetchData = async () => {
+    try {
+      const [instRes, techRes] = await Promise.all([
+        fetch('/api/installations'),
+        fetch('/api/technicians')
+      ]);
+      const instData = await instRes.json();
+      const techData = await techRes.json();
+      setInstallations(instData);
+      setTechnicians(Array.isArray(techData) ? techData.filter((t: any) => t.status === "On Duty") : []);
+    } catch (err) {
+      console.error("Failed to fetch data", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetch('/api/installations')
-      .then(res => res.json())
-      .then(data => {
-        setInstallations(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Failed to fetch installations", err);
-        setLoading(false);
-      });
+    fetchData();
   }, []);
+
+  const handleAssignTech = async (id: string, techName: string) => {
+    try {
+      await fetch(`/api/installations/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tech: techName })
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to assign technician");
+    }
+  };
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -95,11 +119,12 @@ export function InstallationsTable({ searchTerm = "" }: { searchTerm?: string })
         <table className="w-full text-left border-collapse min-w-[950px]">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Customer / Location</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">RO Model</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Equipments</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Warranty</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Schedule</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-[320px] min-w-[280px]">Customer / Location</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[180px]">RO Model</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[160px]">Equipments</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[150px]">Warranty</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[150px]">Schedule</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[180px]">Technician</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -140,6 +165,21 @@ export function InstallationsTable({ searchTerm = "" }: { searchTerm?: string })
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-slate-700">{formatDate(item.date)}</span>
                     <span className="text-xs font-medium text-slate-500 mt-0.5">{item.time}</span>
+                  </div>
+                </td>
+                <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-2 relative group">
+                    <Avatar name={item.tech} isTech />
+                    <select
+                      value={item.tech}
+                      onChange={(e) => handleAssignTech(item.id, e.target.value)}
+                      className={`text-sm font-semibold bg-transparent outline-none appearance-none cursor-pointer hover:underline ${item.tech === "Unassigned" ? "text-amber-600" : "text-slate-700"}`}
+                    >
+                      <option value="Unassigned">Unassigned</option>
+                      {technicians.map(t => (
+                        <option key={t.id} value={t.name}>{t.name}</option>
+                      ))}
+                    </select>
                   </div>
                 </td>
               </tr>

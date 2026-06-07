@@ -79,32 +79,32 @@ export function CustomersTable() {
     <div className="flex flex-col gap-5">
 
       {/* ── Stats Row ── */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5 text-blue-600" />
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 sm:p-4 flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-4 text-center sm:text-left overflow-hidden">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
           </div>
-          <div>
-            <p className="text-2xl font-black text-slate-900">{customers.length}</p>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
-            <Shield className="w-5 h-5 text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-black text-slate-900">{activeCount}</p>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active</p>
+          <div className="min-w-0">
+            <p className="text-xl sm:text-2xl font-black text-slate-900 truncate">{customers.length}</p>
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Total</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5 text-rose-500" />
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 sm:p-4 flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-4 text-center sm:text-left overflow-hidden">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+            <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
           </div>
-          <div>
-            <p className="text-2xl font-black text-slate-900">{customers.length - activeCount}</p>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Inactive</p>
+          <div className="min-w-0">
+            <p className="text-xl sm:text-2xl font-black text-slate-900 truncate">{activeCount}</p>
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Active</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 sm:p-4 flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-4 text-center sm:text-left overflow-hidden">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-rose-500" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xl sm:text-2xl font-black text-slate-900 truncate">{customers.length - activeCount}</p>
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Inactive</p>
           </div>
         </div>
       </div>
@@ -120,12 +120,12 @@ export function CustomersTable() {
             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-[#2563EB] transition-all"
           />
         </div>
-        <div className="flex gap-1 bg-slate-100 rounded-xl p-1 shrink-0">
+        <div className="flex flex-wrap gap-1 bg-slate-100 rounded-xl p-1 shrink-0">
           {(["all", "Active", "Inactive"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setStatusFilter(f)}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                 statusFilter === f ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -133,7 +133,7 @@ export function CustomersTable() {
             </button>
           ))}
         </div>
-        <span className="text-xs font-bold text-slate-400 shrink-0 hidden sm:block">
+        <span className="text-xs font-bold text-slate-400 shrink-0 text-center sm:text-left">
           {filtered.length} {filtered.length === 1 ? "customer" : "customers"}
         </span>
       </div>
