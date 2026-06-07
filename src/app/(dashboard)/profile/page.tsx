@@ -86,7 +86,7 @@ export default function ProfileScreen() {
             <ActionRow icon={User} label="Personal Information" value={profile.name} />
             <ActionRow icon={Smartphone} label="Mobile Number" value={profile.phone} />
             <ActionRow icon={Mail} label="Email Address" value={profile.email} />
-            <ActionRow icon={MapPin} label="Installation Address" value={profile.addresses.find(a => a.isPrimary)?.address || "123 Default Address"} />
+            <ActionRow icon={MapPin} label="Installation Address" value={profile.addresses.find(a => a.isPrimary)?.fullAddress || "123 Default Address"} />
           </SectionCard>
         </motion.div>
 

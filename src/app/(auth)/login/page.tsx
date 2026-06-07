@@ -48,17 +48,41 @@ const Typewriter = ({ texts, delay = 2500 }: { texts: string[], delay?: number }
 export default function LoginScreen() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (phone.length === 10 && name.trim().length > 0) {
-      // Store user details in localStorage or simulated backend (for now just route to home)
-      router.push(`/home`);
+  const handleLogin = async () => {
+    if (phone.length === 10) {
+      setLoading(true);
+      setError("");
+      try {
+        // We call the admin portal API to verify if the customer exists
+        // In local development, Admin Portal runs on 3000. 
+        const res = await fetch(`http://localhost:3000/api/customers/${phone}`);
+        if (!res.ok) {
+          if (res.status === 404) {
+            setError("Your account has not been activated. Please contact the administrator or wait until your installation is complete.");
+          } else {
+            setError("Something went wrong. Please try again.");
+          }
+          setLoading(false);
+          return;
+        }
+
+        const data = await res.json();
+        
+        // Save customer details to local storage so the customer portal can use it
+        localStorage.setItem("customer_profile", JSON.stringify(data));
+        
+        router.push(`/home`);
+      } catch (err) {
+        setError("Could not connect to the server. Please ensure the Admin portal is running.");
+        setLoading(false);
+      }
     }
   };
 
-  const isFormValid = phone.length === 10 && name.trim().length > 0 && address.trim().length > 0;
+  const isFormValid = phone.length === 10 && !loading;
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 h-full relative overflow-y-auto">
@@ -113,7 +137,8 @@ export default function LoginScreen() {
           className="flex-1 space-y-5"
         >
           <div className="mb-2 text-center">
-            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Set up your profile</h2>
+            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Login to your account</h2>
+            <p className="text-sm font-semibold text-slate-500 mt-1">Enter your registered mobile number</p>
           </div>
 
           <div className="space-y-4">
@@ -122,38 +147,15 @@ export default function LoginScreen() {
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 block ml-1">Mobile Number</label>
               <PhoneInput 
                 value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                className="bg-white shadow-sm border-slate-200 focus:ring-2 focus:ring-[#00B8A9]/20"
+                onChange={(e) => {
+                  setPhone(e.target.value.replace(/\D/g, ''));
+                  setError("");
+                }}
+                className={`bg-white shadow-sm focus:ring-2 focus:ring-[#00B8A9]/20 ${error ? 'border-rose-400 focus:ring-rose-200' : 'border-slate-200'}`}
               />
-            </div>
-
-            {/* Full Name */}
-            <div>
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 block ml-1 flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-[#0F4C81]" />
-                Full Name
-              </label>
-              <TextInput 
-                placeholder="Enter your full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="bg-white shadow-sm border-slate-200 focus:ring-2 focus:ring-[#0F4C81]/20"
-              />
-            </div>
-
-            {/* Installation Address */}
-            <div>
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 block ml-1 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#00B8A9]" />
-                Installation Address
-              </label>
-              <TextAreaInput 
-                placeholder="Enter complete address for RO installation and service"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                rows={3}
-                className="bg-white shadow-sm border-slate-200 focus:ring-2 focus:ring-[#00B8A9]/20"
-              />
+              {error && (
+                <p className="text-xs font-bold text-rose-600 mt-2 ml-1 animate-in slide-in-from-top-1">{error}</p>
+              )}
             </div>
           </div>
         </motion.div>
@@ -169,8 +171,8 @@ export default function LoginScreen() {
             disabled={!isFormValid}
             className="h-14 text-lg shadow-premium active:scale-[0.98] w-full flex items-center justify-center gap-2 group"
           >
-            Continue to Dashboard
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            {loading ? "Verifying Account..." : "Login"}
+            {!loading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
           </PrimaryButton>
           
           <p className="text-center text-[10px] font-semibold text-slate-400 mt-5 px-8 leading-relaxed">

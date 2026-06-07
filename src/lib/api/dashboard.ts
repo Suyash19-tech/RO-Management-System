@@ -1,4 +1,8 @@
 export interface DashboardData {
+  user?: {
+    name: string;
+    phone: string;
+  };
   roScore: number;
   nextService: string;
   activeAMC: boolean;
