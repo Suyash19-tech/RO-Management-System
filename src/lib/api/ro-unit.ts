@@ -64,12 +64,12 @@ export const fetchMyRODetails = async (): Promise<ROUnitDetails | null> => {
     });
   }
 
-  const completedServices = parsed.appointments?.filter((a: any) => a.status === 'COMPLETED').length || 0;
+  const completedServices = parsed.appointments?.filter((a: any) => a.status?.toUpperCase() === 'COMPLETED').length || 0;
   const remainingServices = installation ? (installation.servicesCount !== undefined ? installation.servicesCount : 3) : 3;
   const totalAllocated = remainingServices + completedServices;
 
   // Add completed services to timeline
-  parsed.appointments?.filter((a: any) => a.status === 'COMPLETED').forEach((apt: any) => {
+  parsed.appointments?.filter((a: any) => a.status?.toUpperCase() === 'COMPLETED').forEach((apt: any) => {
     timeline.push({
       id: apt.id,
       type: "SERVICE",
@@ -93,7 +93,7 @@ export const fetchMyRODetails = async (): Promise<ROUnitDetails | null> => {
       serviceStatus: "GOOD",
       filterStatus: "GOOD",
       membraneStatus: "GOOD",
-      openComplaints: parsed.appointments?.filter((a: any) => a.status !== 'COMPLETED').length || 0,
+      openComplaints: parsed.appointments?.filter((a: any) => a.status?.toUpperCase() !== 'COMPLETED').length || 0,
     },
     serviceUsage: {
       allocated: totalAllocated,
