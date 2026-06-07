@@ -92,9 +92,9 @@ export const fetchMyRODetails = async (): Promise<ROUnitDetails | null> => {
       openComplaints: parsed.appointments?.filter((a: any) => a.status !== 'COMPLETED').length || 0,
     },
     serviceUsage: {
-      allocated: installation.servicesCount || 3,
+      allocated: installation.servicesCount !== undefined ? installation.servicesCount : 3,
       used: parsed.appointments?.filter((a: any) => a.status === 'COMPLETED').length || 0,
-      remaining: Math.max((installation.servicesCount || 3) - (parsed.appointments?.filter((a: any) => a.status === 'COMPLETED').length || 0), 0),
+      remaining: Math.max((installation.servicesCount !== undefined ? installation.servicesCount : 3) - (parsed.appointments?.filter((a: any) => a.status === 'COMPLETED').length || 0), 0),
     },
     amc: {
       active: !!amc,
