@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import * as THREE from "three";
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -11,43 +10,48 @@ export default function SplashScreen() {
   const [vantaEffect, setVantaEffect] = useState<any>(0);
 
   useEffect(() => {
-    // Dynamically load vanta to prevent SSR issues
-    const initVanta = async () => {
+    let vantaEffectInstance: any = null;
+    const initVanta = () => {
       try {
-        const WAVES = (await import("vanta/dist/vanta.waves.min")).default;
-        if (!vantaEffect && vantaRef.current) {
-          setVantaEffect(
-            WAVES({
-              el: vantaRef.current,
-              THREE: THREE,
-              mouseControls: true,
-              touchControls: true,
-              gyroControls: false,
-              minHeight: 200.00,
-              minWidth: 200.00,
-              scale: 1.00,
-              scaleMobile: 1.00,
-              color: 0x4a79b3,
-              waveHeight: 15.50,
-              waveSpeed: 1.10
-            })
-          );
+        if (!vantaEffectInstance && vantaRef.current && (window as any).VANTA) {
+          vantaEffectInstance = (window as any).VANTA.WAVES({
+            el: vantaRef.current,
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0x4a79b3,
+            waveHeight: 15.50,
+            waveSpeed: 1.10
+          });
+          setVantaEffect(vantaEffectInstance);
         }
       } catch (err) {
         console.error("Vanta failed to load:", err);
       }
     };
-    initVanta();
-    
+
+    // Retry initialization if scripts haven't loaded yet
+    const checkVanta = setInterval(() => {
+      if ((window as any).VANTA) {
+        initVanta();
+        clearInterval(checkVanta);
+      }
+    }, 100);
+
     const timer = setTimeout(() => {
       router.push("/login");
     }, 2500);
     
     return () => {
+      clearInterval(checkVanta);
       clearTimeout(timer);
-      if (vantaEffect) vantaEffect.destroy();
+      if (vantaEffectInstance) vantaEffectInstance.destroy();
     };
-  }, [router, vantaEffect]);
+  }, [router]);
 
   return (
     <div ref={vantaRef} className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F4C81] to-[#0a355c] h-[100dvh] relative overflow-hidden">

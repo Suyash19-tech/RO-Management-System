@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import * as THREE from "three";
 import { ArrowRight, User, MapPin } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/Buttons";
 import { PhoneInput, TextInput, TextAreaInput } from "@/components/ui/Inputs";
@@ -55,37 +54,42 @@ export default function LoginScreen() {
   const [vantaEffect, setVantaEffect] = useState<any>(0);
 
   useEffect(() => {
-    const initVanta = async () => {
+    let vantaEffectInstance: any = null;
+    const initVanta = () => {
       try {
-        const WAVES = (await import("vanta/dist/vanta.waves.min")).default;
-        if (!vantaEffect && vantaRef.current) {
-          setVantaEffect(
-            WAVES({
-              el: vantaRef.current,
-              THREE: THREE,
-              mouseControls: true,
-              touchControls: true,
-              gyroControls: false,
-              minHeight: 200.00,
-              minWidth: 200.00,
-              scale: 1.00,
-              scaleMobile: 1.00,
-              color: 0x4a79b3,
-              waveHeight: 15.50,
-              waveSpeed: 1.10
-            })
-          );
+        if (!vantaEffectInstance && vantaRef.current && (window as any).VANTA) {
+          vantaEffectInstance = (window as any).VANTA.WAVES({
+            el: vantaRef.current,
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0x4a79b3,
+            waveHeight: 15.50,
+            waveSpeed: 1.10
+          });
+          setVantaEffect(vantaEffectInstance);
         }
       } catch (err) {
         console.error("Vanta failed to load:", err);
       }
     };
-    initVanta();
+
+    const checkVanta = setInterval(() => {
+      if ((window as any).VANTA) {
+        initVanta();
+        clearInterval(checkVanta);
+      }
+    }, 100);
     
     return () => {
-      if (vantaEffect) vantaEffect.destroy();
+      clearInterval(checkVanta);
+      if (vantaEffectInstance) vantaEffectInstance.destroy();
     };
-  }, [vantaEffect]);
+  }, []);
 
   const handleLogin = async () => {
     if (phone.length === 10) {
