@@ -152,19 +152,43 @@ export default function BookServiceScreen() {
 
   const selectedIssue = ISSUES.find(i => i.id === payload.issueType);
   
-  // Dynamically update the SERVICE_TYPES with actual remaining free services
+  // Dynamically update the SERVICE_TYPES with actual remaining free services and AMC status
   const dynamicServiceTypes = useMemo(() => {
     return SERVICE_TYPES.map(type => {
       if (type.id === "FREE" && roData) {
+        const isExhausted = roData.serviceUsage.remaining === 0;
         return {
           ...type,
-          desc: `${roData.serviceUsage.remaining} visits remaining this year`,
-          badge: `${roData.serviceUsage.remaining} Left`,
+          desc: isExhausted ? "No visits remaining" : `${roData.serviceUsage.remaining} visits remaining this year`,
+          badge: isExhausted ? "0 Left" : `${roData.serviceUsage.remaining} Left`,
+          disabled: isExhausted,
         };
       }
-      return type;
+      if (type.id === "AMC" && roData) {
+        const hasActiveAmc = roData.amc.active;
+        return {
+          ...type,
+          desc: hasActiveAmc ? `Covered under your ${roData.amc.planName}` : "No active AMC plan",
+          badge: hasActiveAmc ? "Active" : "Inactive",
+          disabled: !hasActiveAmc,
+        };
+      }
+      return { ...type, disabled: false };
     });
   }, [roData]);
+
+  // Ensure selected service type is not disabled
+  useEffect(() => {
+    if (dynamicServiceTypes.length > 0) {
+      const selected = dynamicServiceTypes.find(t => t.id === payload.serviceType);
+      if (selected && selected.disabled) {
+        const firstAvailable = dynamicServiceTypes.find(t => !t.disabled);
+        if (firstAvailable) {
+          setPayload(prev => ({ ...prev, serviceType: firstAvailable.id as any }));
+        }
+      }
+    }
+  }, [dynamicServiceTypes, payload.serviceType]);
 
   const selectedService = dynamicServiceTypes.find(s => s.id === payload.serviceType);
   const selectedSlot = TIME_SLOTS.find(s => s.id === payload.preferredSlot);
@@ -299,15 +323,18 @@ export default function BookServiceScreen() {
                 <div className="space-y-3">
                   {dynamicServiceTypes.map((type) => {
                     const active = payload.serviceType === type.id;
+                    const disabled = type.disabled;
                     return (
                       <button
                         key={type.id}
+                        disabled={disabled}
                         onClick={() => setPayload({ ...payload, serviceType: type.id as any })}
                         className={cn(
-                          "w-full flex items-center gap-4 p-4 rounded-[20px] border-2 transition-all duration-200 active:scale-[0.98] text-left",
-                          active
+                          "w-full flex items-center gap-4 p-4 rounded-[20px] border-2 transition-all duration-200 text-left",
+                          disabled ? "opacity-50 cursor-not-allowed grayscale-[0.5] border-slate-200 bg-slate-50" : "active:scale-[0.98]",
+                          !disabled && active
                             ? cn("bg-white border-solid", type.borderActive, type.shadow)
-                            : "border-transparent bg-white/70 hover:bg-white"
+                            : !disabled && "border-transparent bg-white/70 hover:bg-white"
                         )}
                       >
                         {/* Icon */}
