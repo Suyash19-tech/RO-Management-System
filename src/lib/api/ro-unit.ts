@@ -64,7 +64,10 @@ export const fetchMyRODetails = async (): Promise<ROUnitDetails | null> => {
     });
   }
 
-  const completedServices = parsed.appointments?.filter((a: any) => a.status?.toUpperCase() === 'COMPLETED').length || 0;
+  const completedServices = parsed.appointments?.filter((a: any) => 
+    a.status?.toUpperCase() === 'COMPLETED' && 
+    (a.paymentStatus === 'Free' || a.type?.includes('Free Service'))
+  ).length || 0;
   const remainingServices = installation ? (installation.servicesCount !== undefined ? installation.servicesCount : 3) : 3;
   const totalAllocated = remainingServices + completedServices;
 
