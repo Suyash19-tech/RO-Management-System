@@ -128,17 +128,17 @@ export function InvoiceView({ apt, onClose }: { apt: Appointment; onClose: () =>
               <th className="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right w-32">Amount</th>
             </tr></thead>
             <tbody className="divide-y divide-slate-200">
-              {items.length === 0 ? (
+              {items.length === 0 && !apt.type.includes("Paid Service") ? (
                 <tr>
-                  <td className="py-4"><p className="font-bold text-black">{apt.type} — Service Visit</p><p className="text-xs text-slate-500 mt-1">On-site service by {apt.tech}</p></td>
+                  <td className="py-4"><p className="font-bold text-black">{apt.type.split(" — ")[0]} — Service Visit</p><p className="text-xs text-slate-500 mt-1">On-site service by {apt.tech}</p></td>
                   <td className="py-4 text-center font-bold text-black">1</td>
                   <td className="py-4 text-right font-bold text-black">₹{total.toLocaleString("en-IN")}</td>
                 </tr>
               ) : (<>
                 <tr>
-                  <td className="py-4"><p className="font-bold text-black">{apt.type} — Service Visit</p><p className="text-xs text-slate-500 mt-1">On-site service by {apt.tech}</p></td>
+                  <td className="py-4"><p className="font-bold text-black">{apt.type.split(" — ")[0]} — Service Visit</p><p className="text-xs text-slate-500 mt-1">On-site service by {apt.tech}</p></td>
                   <td className="py-4 text-center font-bold text-black">1</td>
-                  <td className="py-4 text-right text-slate-400">—</td>
+                  <td className="py-4 text-right text-slate-400">{apt.type.includes("Paid Service") ? '₹299' : '—'}</td>
                 </tr>
                 {items.map((item, i) => (
                   <tr key={i}>
@@ -233,7 +233,8 @@ function CompletionWizard({
       .catch((err) => console.error("Failed to fetch products:", err));
   }, []);
 
-  const totalCost = items.reduce((s, i) => s + i.cost * i.qty, 0);
+  const baseCharge = apt.type.includes("Paid Service") ? 299 : 0;
+  const totalCost = baseCharge + items.reduce((s, i) => s + i.cost * i.qty, 0);
 
   const addItem = () => setItems((p) => [...p, { name: "", qty: 1, cost: 0 }]);
   const removeItem = (idx: number) => setItems((p) => p.filter((_, i) => i !== idx));

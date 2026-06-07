@@ -67,7 +67,7 @@ const sidebarGroups: SidebarGroup[] = [
     icon: Briefcase,
     items: [
       { name: "New Installations", href: "/dashboard/installations", icon: Wrench },
-      { name: "Repair Services", href: "/dashboard/services", icon: ClipboardList },
+      { name: "Repair Requests & Appointments", href: "/dashboard/services", icon: ClipboardList },
       { name: "Service Schedule", href: "/dashboard/appointments", icon: Calendar },
     ]
   }
