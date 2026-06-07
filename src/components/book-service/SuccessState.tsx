@@ -21,13 +21,13 @@ export function SuccessState({ ticketId, expectedTime, onTrack, onHome }: Succes
       </p>
 
       <div className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 mb-8 text-left">
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-sm text-slate-500">Ticket ID</span>
-          <span className="font-bold text-slate-900">{ticketId}</span>
+        <div className="flex flex-col gap-1 mb-4">
+          <span className="text-sm text-slate-500 uppercase tracking-wider font-bold">Ticket ID</span>
+          <span className="font-black text-slate-900 text-lg tracking-tight break-all">{ticketId}</span>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-slate-500">Expected Response</span>
-          <span className="font-bold text-[#00B8A9]">{expectedTime}</span>
+        <div className="flex flex-col gap-1">
+          <span className="text-sm text-slate-500 uppercase tracking-wider font-bold">Expected Response</span>
+          <span className="font-black text-[#00B8A9] text-lg">{expectedTime}</span>
         </div>
       </div>
 

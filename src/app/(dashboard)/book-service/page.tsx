@@ -154,7 +154,7 @@ export default function BookServiceScreen() {
       <SuccessState
         ticketId={successData.id}
         expectedTime={successData.time}
-        onTrack={() => alert("Tracking coming soon!")}
+        onTrack={() => router.push(`/history/${successData.id}`)}
         onHome={() => router.push("/home")}
       />
     );

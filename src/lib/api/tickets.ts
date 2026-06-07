@@ -38,8 +38,18 @@ export const createTicket = async (payload: CreateTicketPayload): Promise<Ticket
     if (!res.ok) throw new Error("Failed to create appointment on backend");
     
     const data = await res.json();
+    
+    // Refresh localStorage so the new appointment shows up in History
+    try {
+      const profileRes = await fetch(`http://localhost:3000/api/customers/${parsed.phone}`);
+      if (profileRes.ok) {
+        const freshProfile = await profileRes.json();
+        localStorage.setItem("customer_profile", JSON.stringify(freshProfile));
+      }
+    } catch(e) {}
+
     return {
-      ticketId: data.id,
+      ticketId: "TKT-" + data.id.slice(0, 4).toUpperCase(),
       expectedResponseTime: "Within 2 Hours",
       status: "CREATED"
     };
