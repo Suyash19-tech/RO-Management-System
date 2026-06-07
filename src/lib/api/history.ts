@@ -87,7 +87,7 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
       resolution: apt.remarks,
       rating: isCompleted ? 5 : undefined,
       technicianRemarks: apt.remarks,
-      partsReplaced: apt.itemsUsed ? apt.itemsUsed.split(',').map((i: string) => ({ name: i.trim(), quantity: 1, cost: 0 })) : [],
+      partsReplaced: (() => { try { return apt.itemsUsed ? JSON.parse(apt.itemsUsed) : []; } catch { return []; } })(),
       paymentStatus: apt.paymentStatus || undefined,
       costCharged: apt.costCharged || 0,
       completedAt: apt.completedAt || apt.date,
