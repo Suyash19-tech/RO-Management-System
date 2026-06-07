@@ -130,13 +130,13 @@ export function InvoiceView({ apt, onClose }: { apt: Appointment; onClose: () =>
             <tbody className="divide-y divide-slate-200">
               {items.length === 0 && !apt.type.includes("Paid Service") ? (
                 <tr>
-                  <td className="py-4"><p className="font-bold text-black">{apt.type.split(" — ")[0]} — Service Visit</p><p className="text-xs text-slate-500 mt-1">On-site service by {apt.tech}</p></td>
+                  <td className="py-4"><p className="font-bold text-black">{apt.type.split(" — ")[0]} — Visiting Charge</p><p className="text-xs text-slate-500 mt-1">On-site service by {apt.tech}</p></td>
                   <td className="py-4 text-center font-bold text-black">1</td>
                   <td className="py-4 text-right font-bold text-black">₹{total.toLocaleString("en-IN")}</td>
                 </tr>
               ) : (<>
                 <tr>
-                  <td className="py-4"><p className="font-bold text-black">{apt.type.split(" — ")[0]} — Service Visit</p><p className="text-xs text-slate-500 mt-1">On-site service by {apt.tech}</p></td>
+                  <td className="py-4"><p className="font-bold text-black">{apt.type.split(" — ")[0]} — Visiting Charge</p><p className="text-xs text-slate-500 mt-1">On-site service by {apt.tech}</p></td>
                   <td className="py-4 text-center font-bold text-black">1</td>
                   <td className="py-4 text-right text-slate-400">{apt.type.includes("Paid Service") ? '₹299' : '—'}</td>
                 </tr>
@@ -233,8 +233,9 @@ function CompletionWizard({
       .catch((err) => console.error("Failed to fetch products:", err));
   }, []);
 
+  const partsTotal = items.reduce((s, i) => s + i.cost * i.qty, 0);
   const baseCharge = apt.type.includes("Paid Service") ? 299 : 0;
-  const totalCost = baseCharge + items.reduce((s, i) => s + i.cost * i.qty, 0);
+  const totalCost = baseCharge + partsTotal;
 
   const addItem = () => setItems((p) => [...p, { name: "", qty: 1, cost: 0 }]);
   const removeItem = (idx: number) => setItems((p) => p.filter((_, i) => i !== idx));
@@ -429,7 +430,7 @@ function CompletionWizard({
 
                   <div className="flex items-center justify-between pt-3 border-t border-slate-200 mt-1 px-1">
                     <span className="text-sm font-bold text-slate-500">Total Parts Cost</span>
-                    <span className="text-xl font-black text-slate-900">₹{totalCost.toLocaleString("en-IN")}</span>
+                    <span className="text-xl font-black text-slate-900">₹{partsTotal.toLocaleString("en-IN")}</span>
                   </div>
                 </div>
               )}
@@ -450,6 +451,16 @@ function CompletionWizard({
                     <div className="mt-1"><TypePill type={apt.type} /></div>
                   </div>
                 </div>
+
+                {baseCharge > 0 && (
+                  <div className="border-t border-slate-200 pt-3 mt-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600 font-bold">Visiting Charge <span className="font-medium text-slate-400 text-xs ml-1">(Paid Service)</span></span>
+                      <span className="font-bold text-slate-900">₹{baseCharge.toLocaleString("en-IN")}</span>
+                    </div>
+                  </div>
+                )}
+
                 {items.length > 0 && (
                   <div className="border-t border-slate-200 pt-3 mt-1">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Parts Used</p>
