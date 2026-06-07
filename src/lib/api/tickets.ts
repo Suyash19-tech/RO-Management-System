@@ -36,16 +36,14 @@ export const createTicket = async (payload: CreateTicketPayload): Promise<Ticket
     });
 
     if (!res.ok) throw new Error("Failed to create appointment on backend");
-    
+
     const data = await res.json();
     
-    // Refresh localStorage so the new appointment shows up in History
+    // Refresh localStorage locally to avoid CORS / latency
     try {
-      const profileRes = await fetch(`http://localhost:3000/api/customers/${parsed.phone}`);
-      if (profileRes.ok) {
-        const freshProfile = await profileRes.json();
-        localStorage.setItem("customer_profile", JSON.stringify(freshProfile));
-      }
+      if (!parsed.appointments) parsed.appointments = [];
+      parsed.appointments.unshift(data); // Add to beginning
+      localStorage.setItem("customer_profile", JSON.stringify(parsed));
     } catch(e) {}
 
     return {
