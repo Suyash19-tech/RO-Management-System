@@ -38,6 +38,7 @@ export interface ROUnitDetails {
   }>;
   
   technicianNotes: string[];
+  rawInstallation: any;
 }
 
 export const fetchMyRODetails = async (): Promise<ROUnitDetails | null> => {
@@ -105,5 +106,6 @@ export const fetchMyRODetails = async (): Promise<ROUnitDetails | null> => {
     technicianNotes: [
       "Device is running efficiently."
     ],
+    rawInstallation: installation,
   };
 };

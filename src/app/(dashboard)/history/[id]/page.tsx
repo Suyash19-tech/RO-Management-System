@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, FileText, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { fetchTicketById, Ticket } from "@/lib/api/history";
+import { fetchProfile } from "@/lib/api/profile";
+import { ServiceInvoiceModal } from "@/components/ui/InvoiceModal";
 
 import { StatusTracker } from "@/components/history/StatusTracker";
 import { TechnicianCard } from "@/components/history/TechnicianCard";
@@ -14,9 +16,12 @@ export default function TicketDetailScreen() {
   const params = useParams();
   const router = useRouter();
   const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showInvoice, setShowInvoice] = useState(false);
 
   useEffect(() => {
+    fetchProfile().then(p => setProfile(p));
     if (params.id) {
       fetchTicketById(params.id as string).then((res) => {
         setTicket(res);
@@ -98,7 +103,7 @@ export default function TicketDetailScreen() {
             )}
             <div className="mt-4 flex justify-end relative z-10">
               <button 
-                onClick={() => alert("Downloading Invoice...")}
+                onClick={() => setShowInvoice(true)}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-widest shadow-md transition-all active:scale-95 flex items-center gap-2"
               >
                 <FileText className="w-4 h-4" />
@@ -123,6 +128,10 @@ export default function TicketDetailScreen() {
           <TicketTimeline timeline={ticket.timeline} />
         </motion.div>
       </motion.div>
+
+      {showInvoice && profile && (
+        <ServiceInvoiceModal ticket={ticket} profile={profile} onClose={() => setShowInvoice(false)} />
+      )}
     </div>
   );
 }

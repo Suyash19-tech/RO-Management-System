@@ -4,19 +4,24 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 import { fetchMyRODetails, ROUnitDetails } from "@/lib/api/ro-unit";
+import { fetchProfile } from "@/lib/api/profile";
 import { FileText } from "lucide-react";
 
 import { ROHeroCard } from "@/components/my-ro/ROHeroCard";
 import { ROCareBreakdown } from "@/components/my-ro/ROCareBreakdown";
 import { ServiceUsageCard } from "@/components/my-ro/ServiceUsageCard";
 import { WaterDropLoader } from "@/components/ui/WaterDropLoader";
+import { InstallationInvoiceModal } from "@/components/ui/InvoiceModal";
 
 export default function MyROScreen() {
 
   const [data, setData] = useState<ROUnitDetails | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showInvoice, setShowInvoice] = useState(false);
 
   useEffect(() => {
+    fetchProfile().then(p => setProfile(p));
     fetchMyRODetails().then((res) => {
       setData(res);
       setLoading(false);
@@ -67,7 +72,7 @@ export default function MyROScreen() {
 
           <motion.div variants={item} className="px-1 mt-4 mb-4">
             <button 
-              onClick={() => alert("Downloading Original RO Invoice...")}
+              onClick={() => setShowInvoice(true)}
               className="w-full bg-white border border-[#0F4C81]/20 hover:border-[#0F4C81] text-[#0F4C81] font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
             >
               <FileText className="w-5 h-5" />
@@ -80,6 +85,10 @@ export default function MyROScreen() {
           </motion.div>
 
         </motion.div>
+      )}
+
+      {showInvoice && profile && data?.rawInstallation && (
+        <InstallationInvoiceModal installation={data.rawInstallation} profile={profile} onClose={() => setShowInvoice(false)} />
       )}
     </div>
   );

@@ -16,6 +16,9 @@ export interface Ticket {
   customerNotes?: string;
   technicianRemarks?: string;
   partsReplaced?: Array<{ name: string; quantity: number; cost: number }>;
+  paymentStatus?: string;
+  costCharged?: number;
+  completedAt?: string;
   photos?: string[];
   timeline: Array<{
     status: TicketStatus;
@@ -68,7 +71,7 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
     }
     
     if (isCompleted) {
-      timeline.push({ status: "COMPLETED" as TicketStatus, timestamp: apt.completedAt || apt.date, description: "Service successfully completed." });
+      timeline.push({ status: "COMPLETED" as TicketStatus, timestamp: apt.completedAt || apt.date, description: `Service completed. ${apt.remarks ? 'Remark: ' + apt.remarks : ''}` });
     }
 
     return {
@@ -85,6 +88,9 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
       rating: isCompleted ? 5 : undefined,
       technicianRemarks: apt.remarks,
       partsReplaced: apt.itemsUsed ? apt.itemsUsed.split(',').map((i: string) => ({ name: i.trim(), quantity: 1, cost: 0 })) : [],
+      paymentStatus: apt.paymentStatus || undefined,
+      costCharged: apt.costCharged || 0,
+      completedAt: apt.completedAt || apt.date,
       timeline
     };
   }).sort((a: Ticket, b: Ticket) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
