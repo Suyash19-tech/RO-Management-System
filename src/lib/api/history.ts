@@ -53,7 +53,7 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
     let status: TicketStatus = "CREATED";
     if (apt.status === "COMPLETED" || apt.status === "Completed") status = "COMPLETED";
     else if (apt.status === "IN_PROGRESS" || apt.status === "In Progress") status = "IN_PROGRESS";
-    else if (apt.status === "SCHEDULED" || apt.status === "Scheduled") status = "ASSIGNED";
+    else if (apt.status === "SCHEDULED" || apt.status === "Scheduled") status = "ACCEPTED";
     else if (apt.status === "Reschedule Requested") status = "CREATED"; // Customer needs to see remark
     
     const timeline = [
@@ -62,8 +62,9 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
     
     if (apt.status === "Reschedule Requested") {
       timeline.push({ status: "CREATED" as TicketStatus, timestamp: new Date().toISOString(), description: `Admin requested reschedule.` });
-    } else if (status !== "CREATED" && status !== "ASSIGNED") {
+    } else if (status !== "CREATED") {
       timeline.push({ status: "ASSIGNED" as TicketStatus, timestamp: apt.createdAt, description: `Assigned to ${apt.tech || 'Technician'}.` });
+      timeline.push({ status: "ACCEPTED" as TicketStatus, timestamp: apt.createdAt, description: `Service appointment confirmed.` });
     }
     
     if (isCompleted) {
