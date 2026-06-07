@@ -149,12 +149,14 @@ export default function LoginScreen() {
               }}
              />
           </div>
-          <h1 className="text-2xl font-black text-white mb-1 drop-shadow-md tracking-tight h-8 flex items-center justify-center">
-            <Typewriter texts={["Welcome to SardarJi RO..", "Sat Sri Akal Ji.."]} />
-          </h1>
-          <p className="text-white/80 text-xs font-semibold tracking-wider uppercase">
-            Your Health Our Priority
-          </p>
+          <div className="bg-black/30 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-white/10 shadow-xl flex flex-col items-center justify-center">
+            <h1 className="text-xl font-black text-white mb-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-tight h-8 flex items-center justify-center">
+              <Typewriter texts={["Welcome to SardarJi RO..", "Sat Sri Akal Ji.."]} />
+            </h1>
+            <p className="text-white font-bold text-[10px] tracking-widest uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+              Your Health Our Priority
+            </p>
+          </div>
         </motion.div>
       </div>
 

@@ -76,12 +76,12 @@ export default function SplashScreen() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.8 }}
-          className="text-center"
+          className="text-center px-8 py-5 rounded-3xl bg-black/30 backdrop-blur-md border border-white/10 shadow-2xl"
         >
-          <h1 className="text-4xl font-black text-white tracking-tight mb-2 drop-shadow-lg">
-            SARDARJI <span className="text-[#00B8A9]">RO</span>
+          <h1 className="text-4xl font-black text-white tracking-tight mb-2 drop-shadow-[0_4px_10px_rgba(0,0,0,0.6)]">
+            SARDARJI <span className="text-[#00B8A9] drop-shadow-[0_2px_8px_rgba(0,184,169,0.5)]">RO</span>
           </h1>
-          <p className="text-white/80 font-medium tracking-widest uppercase text-sm">
+          <p className="text-white font-bold tracking-widest uppercase text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
             Pure Water. Pure Life.
           </p>
         </motion.div>
