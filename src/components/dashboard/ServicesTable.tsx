@@ -97,6 +97,14 @@ export function ServicesTable() {
   useEffect(() => {
     fetchAppointments();
     fetchTechnicians();
+    
+    // Poll for updates every 5 seconds
+    const interval = setInterval(() => {
+      fetchAppointments();
+      fetchTechnicians();
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   // Fetch Customer Details when Modal Opens

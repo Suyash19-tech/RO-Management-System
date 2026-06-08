@@ -87,6 +87,15 @@ export default function DashboardPage() {
     if (timeFilter !== "custom" || (startDate && endDate)) {
       fetchDashboardData();
     }
+    
+    // Poll for updates every 10 seconds (less frequent for heavy dashboard stats)
+    const interval = setInterval(() => {
+      if (timeFilter !== "custom" || (startDate && endDate)) {
+        fetchDashboardData();
+      }
+    }, 10000);
+    
+    return () => clearInterval(interval);
   }, [timeFilter, startDate, endDate]);
 
   const formatDate = (dateStr: string) => {

@@ -604,7 +604,11 @@ export function AppointmentsTable() {
       setTechnicians(Array.isArray(techData) ? techData.filter((t: any) => t.status === "On Duty") : []);
     } catch { /**/ } finally { setLoading(false); }
   };
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { 
+    fetchAll(); 
+    const interval = setInterval(fetchAll, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const active = all.filter((a) => ["Scheduled", "In Progress"].includes(a.status));
   const completed = all.filter((a) => a.status === "Completed");
