@@ -166,13 +166,15 @@ export function ServicesTable() {
     if (!selectedApt) return;
     setNotifying(true);
 
+    const remarkToSend = adminRemark ? adminRemark : "We are currently unavailable at your requested slot. Please pick a new date and time.";
+
     try {
       await fetch(`/api/appointments/${selectedApt.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           status: 'Reschedule Requested',
-          remarks: adminRemark ? `Admin: ${adminRemark} | Customer: ${selectedApt.remarks || ''}` : selectedApt.remarks
+          remarks: `Admin: ${remarkToSend} | Customer: ${selectedApt.remarks || ''}`
         })
       });
 
@@ -422,8 +424,8 @@ export function ServicesTable() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     <button 
                       onClick={handleRequestReschedule}
-                      disabled={notifying || !adminRemark}
-                      className="flex-1 py-3.5 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                      disabled={notifying}
+                      className="flex-1 py-3.5 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Request Reschedule
                     </button>
