@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-// ─── PLACEHOLDER SLIDES ──────────────────────────────────────────────────────
+// --- PLACEHOLDER SLIDES ------------------------------------------------------
 // Replace these with your actual banner images (800 × 400 px recommended)
 const SLIDES = [
   {

@@ -1,4 +1,5 @@
 "use client";
+import toast from "react-hot-toast";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -74,7 +75,7 @@ export default function TicketDetailScreen() {
 
     const success = await rescheduleTicket(ticket.rawId, rescheduleDate, rescheduleSlot, incrementReschedule);
     if (success) {
-      alert("Reschedule request submitted successfully.");
+      toast.success("Reschedule request submitted successfully.");
       setTicket({ 
         ...ticket, 
         status: "CREATED", 
@@ -84,7 +85,7 @@ export default function TicketDetailScreen() {
       setRescheduleSlot("");
       setShowCustomerRescheduleForm(false);
     } else {
-      alert("Failed to submit reschedule request.");
+      toast.error("Failed to submit reschedule request.");
     }
     setIsRescheduling(false);
   };

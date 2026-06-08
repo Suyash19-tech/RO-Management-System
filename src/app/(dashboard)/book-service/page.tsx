@@ -1,4 +1,5 @@
 "use client";
+import toast from "react-hot-toast";
 
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ─── STEP DEFINITIONS ───────────────────────────────────────
+// --- STEP DEFINITIONS ---------------------------------------
 const STEPS = [
   { id: 1, label: "Issue",   icon: ShieldAlert },
   { id: 2, label: "Type",    icon: ShieldCheck },
@@ -21,7 +22,7 @@ const STEPS = [
   { id: 4, label: "Review",  icon: CheckCircle2 },
 ];
 
-// ─── ISSUE OPTIONS ───────────────────────────────────────────
+// --- ISSUE OPTIONS -------------------------------------------
 const ISSUES = [
   { id: "Water Taste Problem",  icon: Droplet,     color: "from-blue-500 to-cyan-400",    bg: "bg-blue-50",   text: "text-blue-600", borderActive: "border-blue-100 bg-blue-50/20", checkBg: "bg-blue-500", shadow: "shadow-[0_8px_24px_rgba(59,130,246,0.12)]" },
   { id: "Low Water Flow",       icon: Activity,    color: "from-teal-500 to-emerald-400", bg: "bg-teal-50",   text: "text-teal-600", borderActive: "border-teal-100 bg-teal-50/20", checkBg: "bg-teal-500", shadow: "shadow-[0_8px_24px_rgba(20,184,166,0.12)]" },
@@ -32,7 +33,7 @@ const ISSUES = [
   { id: "Other",                icon: Plus,        color: "from-indigo-500 to-blue-400",  bg: "bg-indigo-50", text: "text-indigo-600", borderActive: "border-indigo-100 bg-indigo-50/20", checkBg: "bg-indigo-500", shadow: "shadow-[0_8px_24px_rgba(99,102,241,0.12)]" },
 ];
 
-// ─── SERVICE TYPES ────────────────────────────────────────────
+// --- SERVICE TYPES --------------------------------------------
 const SERVICE_TYPES = [
   {
     id: "FREE",
@@ -78,14 +79,14 @@ const SERVICE_TYPES = [
   },
 ];
 
-// ─── SLOTS ────────────────────────────────────────────────────
+// --- SLOTS ----------------------------------------------------
 const TIME_SLOTS = [
   { id: "Morning (9-12)",   label: "Morning",   time: "9:00 – 12:00", icon: Sun,    gradient: "from-amber-400 to-orange-400" },
   { id: "Afternoon (12-4)", label: "Afternoon", time: "12:00 – 4:00", icon: Cloud,  gradient: "from-sky-400 to-blue-500" },
   { id: "Evening (4-7)",    label: "Evening",   time: "4:00 – 7:00",  icon: Moon,   gradient: "from-indigo-500 to-purple-600" },
 ];
 
-// ─── MAIN PAGE ────────────────────────────────────────────────
+// --- MAIN PAGE ------------------------------------------------
 export default function BookServiceScreen() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -137,7 +138,7 @@ export default function BookServiceScreen() {
       const res = await createTicket(payload);
       setSuccessData({ id: res.ticketId, time: res.expectedResponseTime });
     } catch {
-      alert("Failed to book service. Please try again.");
+      toast.error("Failed to book service. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

@@ -137,6 +137,14 @@ export function CustomerNotifications() {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
+  const dismissAll = () => {
+    const dismissed = JSON.parse(localStorage.getItem("cust_dismissed_notifs") || "[]");
+    const allIds = notifications.map(n => n.id);
+    const updated = [...new Set([...dismissed, ...allIds])];
+    localStorage.setItem("cust_dismissed_notifs", JSON.stringify(updated));
+    setNotifications([]);
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button 
@@ -154,10 +162,20 @@ export function CustomerNotifications() {
       {isOpen && (
         <div className="fixed top-[70px] left-4 right-4 md:absolute md:top-auto md:left-auto md:right-0 md:mt-3 md:w-80 bg-white border border-slate-100 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200">
           <div className="px-5 py-4 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-            <h4 className="font-extrabold text-slate-900">Updates</h4>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              {notifications.length} New
-            </span>
+            <div>
+              <h4 className="font-extrabold text-slate-900">Updates</h4>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                {notifications.length} New
+              </span>
+            </div>
+            {notifications.length > 0 && (
+              <button 
+                onClick={dismissAll}
+                className="text-xs font-bold text-blue-600 hover:text-blue-700"
+              >
+                Mark all read
+              </button>
+            )}
           </div>
 
           <div className="divide-y divide-slate-50 max-h-[60vh] overflow-y-auto">
@@ -171,7 +189,7 @@ export function CustomerNotifications() {
                       <span className="flex w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
                     )}
                   </div>
-                  <Link href={item.link} onClick={() => setIsOpen(false)} className="flex-1 min-w-0 pr-6 block">
+                  <Link href={item.link} onClick={() => setIsOpen(false)} className="flex-1 min-w-0 pr-8 block">
                     <p className="text-sm font-extrabold text-slate-900 truncate">{item.title}</p>
                     <p className="text-xs text-slate-500 mt-1">{item.message}</p>
                   </Link>
@@ -181,9 +199,10 @@ export function CustomerNotifications() {
                       e.preventDefault();
                       dismissNotification(item.id);
                     }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 bg-slate-100 hover:bg-emerald-100 text-slate-400 hover:text-emerald-600 rounded-full opacity-0 group-hover:opacity-100 transition-all scale-95 hover:scale-100"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-slate-50 hover:bg-emerald-100 text-slate-400 hover:text-emerald-600 rounded-full md:opacity-0 md:group-hover:opacity-100 transition-all cursor-pointer"
+                    title="Mark as read"
                   >
-                    <Check className="w-3.5 h-3.5" />
+                    <Check className="w-4 h-4" />
                   </button>
                 </div>
               ))
