@@ -31,9 +31,9 @@ export default function DashboardHome() {
           let user = undefined;
           try {
             const stored = localStorage.getItem("customer_profile");
-            if (stored) {
+            if (stored && stored !== "null" && stored !== "undefined") {
               const parsed = JSON.parse(stored);
-              user = { name: parsed.name, phone: parsed.phone };
+              if (parsed) user = { name: parsed.name, phone: parsed.phone };
             }
           } catch(e) {}
           

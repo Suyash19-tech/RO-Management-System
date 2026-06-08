@@ -44,9 +44,9 @@ export interface ROUnitDetails {
 export const fetchMyRODetails = async (): Promise<ROUnitDetails | null> => {
   if (typeof window === "undefined") return null;
   const stored = localStorage.getItem("customer_profile");
-  if (!stored) return null;
-  
-  const parsed = JSON.parse(stored);
+  if (!stored || stored === "null" || stored === "undefined") return null;
+  let parsed; try { parsed = JSON.parse(stored); } catch(e) { return null; }
+  if (!parsed) return null;
   
   const installation = parsed.installations?.[0];
   if (!installation) return null;

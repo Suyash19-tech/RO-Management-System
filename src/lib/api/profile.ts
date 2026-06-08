@@ -27,9 +27,9 @@ export interface UserProfile {
 export const fetchProfile = async (): Promise<UserProfile | null> => {
   if (typeof window === "undefined") return null;
   const stored = localStorage.getItem("customer_profile");
-  if (!stored) return null;
-  
-  const parsed = JSON.parse(stored);
+  if (!stored || stored === "null" || stored === "undefined") return null;
+  let parsed; try { parsed = JSON.parse(stored); } catch(e) { return null; }
+  if (!parsed) return null;
   
   // Attempt to fetch fresh data
   try {
@@ -74,8 +74,9 @@ export const fetchProfile = async (): Promise<UserProfile | null> => {
 export const updateProfile = async (data: Partial<UserProfile>) => {
   if (typeof window === "undefined") return false;
   const stored = localStorage.getItem("customer_profile");
-  if (!stored) return false;
-  const parsed = JSON.parse(stored);
+  if (!stored || stored === "null" || stored === "undefined") return false;
+  let parsed; try { parsed = JSON.parse(stored); } catch(e) { return false; }
+  if (!parsed) return false;
 
   try {
     const res = await fetch(`http://localhost:3000/api/customers/${parsed.phone}`, {

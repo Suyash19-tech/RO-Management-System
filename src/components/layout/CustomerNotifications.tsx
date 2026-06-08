@@ -48,61 +48,69 @@ export function CustomerNotifications() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const loadNotifications = async () => {
-    // fetchTickets already synchronizes with the backend under the hood
-    const tickets = await fetchTickets();
-    const generated: CustomerNotification[] = [];
-
-    tickets.forEach((t) => {
-      // 1. Assignment & Confirmation
-      if (t.status === "ASSIGNED" || t.status === "ACCEPTED" || t.status === "IN_PROGRESS") {
-        generated.push({
-          id: `confirmed-${t.rawId}`,
-          type: "Info",
-          title: "Service Confirmed!",
-          message: `Tech Assigned: ${t.technician?.name || 'Unassigned'}`,
-          link: `/history/${t.id}`,
-          date: new Date(t.createdAt).getTime(), // In a real app we'd track the exact assignment time, but this works for sorting
-        });
-      }
+    try {
+      // fetchTickets already synchronizes with the backend under the hood
+      const tickets = await fetchTickets();
+      if (!tickets || tickets.length === 0) return;
       
-      // 2. Invoice Generated
-      if (t.status === "COMPLETED") {
-        generated.push({
-          id: `invoice-${t.rawId}`,
-          type: "Success",
-          title: "Invoice Ready",
-          message: "Service completed. Tap to view invoice.",
-          link: `/history/${t.id}`,
-          date: t.completedAt ? new Date(t.completedAt).getTime() : new Date().getTime(),
-        });
-      }
-    });
+      const generated: CustomerNotification[] = [];
 
-    // Sort newest first
-    generated.sort((a, b) => b.date - a.date);
-
-    if (typeof window !== "undefined") {
-      const dismissed = JSON.parse(localStorage.getItem("cust_dismissed_notifs") || "[]");
-      const visible = generated.filter((n) => !dismissed.includes(n.id));
-      
-      // Check for strictly *new* notifications to play sound
-      const knownIds = JSON.parse(localStorage.getItem("cust_known_notifs") || "[]");
-      let hasNew = false;
-      const updatedKnownIds = [...knownIds];
-
-      visible.forEach(n => {
-        if (!knownIds.includes(n.id)) {
-          hasNew = true;
-          updatedKnownIds.push(n.id);
+      tickets.forEach((t) => {
+        if (!t || !t.rawId) return;
+        
+        // 1. Assignment & Confirmation
+        if (t.status === "ASSIGNED" || t.status === "ACCEPTED" || t.status === "IN_PROGRESS") {
+          generated.push({
+            id: `confirmed-${t.rawId}`,
+            type: "Info",
+            title: "Service Confirmed!",
+            message: `Tech Assigned: ${t.technician?.name || 'Our Technician'}`,
+            link: `/history/${t.id}`,
+            date: new Date(t.createdAt).getTime(),
+          });
+        }
+        
+        // 2. Invoice Generated
+        if (t.status === "COMPLETED") {
+          generated.push({
+            id: `invoice-${t.rawId}`,
+            type: "Success",
+            title: "Invoice Ready",
+            message: "Service completed. Tap to view.",
+            link: `/history/${t.id}`,
+            date: t.completedAt ? new Date(t.completedAt).getTime() : Date.now(),
+          });
         }
       });
 
-      if (hasNew) {
-        localStorage.setItem("cust_known_notifs", JSON.stringify(updatedKnownIds));
-        playCutePop();
-      }
+      // Sort newest first
+      generated.sort((a, b) => b.date - a.date);
 
-      setNotifications(visible);
+      if (typeof window !== "undefined") {
+        const dismissed = JSON.parse(localStorage.getItem("cust_dismissed_notifs") || "[]");
+        const visible = generated.filter((n) => !dismissed.includes(n.id));
+        
+        // Check for strictly *new* notifications to play sound
+        const knownIds = JSON.parse(localStorage.getItem("cust_known_notifs") || "[]");
+        let hasNew = false;
+        const updatedKnownIds = [...knownIds];
+
+        visible.forEach(n => {
+          if (!knownIds.includes(n.id)) {
+            hasNew = true;
+            updatedKnownIds.push(n.id);
+          }
+        });
+
+        if (hasNew) {
+          localStorage.setItem("cust_known_notifs", JSON.stringify(updatedKnownIds));
+          playCutePop();
+        }
+
+        setNotifications(visible);
+      }
+    } catch (e) {
+      // Silently fail — notifications are non-critical
     }
   };
 

@@ -3,16 +3,10 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Settings, 
-  Wrench, 
-  History, 
-  User, 
-  Bell
-} from "lucide-react";
+import { LayoutDashboard, Settings, Wrench, History, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FloatingBubbles } from "@/components/layout/FloatingBubbles";
+import { CustomerNotifications } from "@/components/layout/CustomerNotifications";
 
 const MOBILE_NAV = [
   { label: "Home", href: "/home", icon: LayoutDashboard },
@@ -22,7 +16,7 @@ const MOBILE_NAV = [
   { label: "Profile", href: "/profile", icon: User },
 ];
 
-import { CustomerNotifications } from "@/components/layout/CustomerNotifications";
+
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();

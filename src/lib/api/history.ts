@@ -32,9 +32,16 @@ export interface Ticket {
 export const fetchTickets = async (): Promise<Ticket[]> => {
   if (typeof window === "undefined") return [];
   const stored = localStorage.getItem("customer_profile");
-  if (!stored) return [];
+  if (!stored || stored === "null" || stored === "undefined") return [];
   
-  let parsed = JSON.parse(stored);
+  let parsed;
+  try {
+    parsed = JSON.parse(stored);
+  } catch (e) {
+    return [];
+  }
+  
+  if (!parsed || !parsed.phone) return [];
 
   // Sync with backend to get latest admin changes (status, assigned tech, remarks)
   try {
@@ -47,10 +54,10 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
       parsed = freshProfile;
     }
   } catch(e) {
-    console.error("Failed to sync profile for tickets:", e);
+    // Backend unavailable – use cached profile, no error logging
   }
   
-  if (!parsed.appointments || parsed.appointments.length === 0) return [];
+  if (!parsed.appointments || !Array.isArray(parsed.appointments) || parsed.appointments.length === 0) return [];
 
   return parsed.appointments.map((apt: any) => {
     const isCompleted = apt.status === 'COMPLETED';

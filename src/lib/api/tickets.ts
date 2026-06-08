@@ -16,8 +16,9 @@ export interface TicketResponse {
 export const createTicket = async (payload: CreateTicketPayload): Promise<TicketResponse> => {
   if (typeof window === "undefined") throw new Error("Window not defined");
   const stored = localStorage.getItem("customer_profile");
-  if (!stored) throw new Error("No customer profile found");
-  const parsed = JSON.parse(stored);
+  if (!stored || stored === "null" || stored === "undefined") throw new Error("No customer profile found");
+  let parsed; try { parsed = JSON.parse(stored); } catch(e) { throw new Error("Invalid customer profile"); }
+  if (!parsed) throw new Error("No customer profile found");
 
   try {
     const res = await fetch("http://localhost:3000/api/appointments", {

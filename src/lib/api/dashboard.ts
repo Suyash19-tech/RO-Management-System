@@ -29,9 +29,9 @@ export interface DashboardData {
 export const fetchDashboardData = async (): Promise<DashboardData | null> => {
   if (typeof window === "undefined") return null;
   const stored = localStorage.getItem("customer_profile");
-  if (!stored) return null;
-  
-  const parsed = JSON.parse(stored);
+  if (!stored || stored === "null" || stored === "undefined") return null;
+  let parsed; try { parsed = JSON.parse(stored); } catch(e) { return null; }
+  if (!parsed) return null;
   
   const amc = parsed.amcs?.find((a: any) => a.status === 'ACTIVE');
   const recentTickets = parsed.appointments?.slice(0, 3).map((apt: any) => ({
