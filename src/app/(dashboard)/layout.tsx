@@ -22,6 +22,8 @@ const MOBILE_NAV = [
   { label: "Profile", href: "/profile", icon: User },
 ];
 
+import { CustomerNotifications } from "@/components/layout/CustomerNotifications";
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -41,10 +43,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
         
         <div className="flex items-center gap-4 md:gap-6">
-          <button className="relative p-2 rounded-full hover:bg-slate-50 transition-all text-slate-600">
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-            <Bell className="w-6 h-6" strokeWidth={1.5} />
-          </button>
+          <CustomerNotifications />
           <button onClick={() => router.push('/profile')} className="w-10 h-10 bg-[#1E3A8A] rounded-full flex items-center justify-center text-white font-bold shadow-md hover:opacity-90 transition-opacity">
             <User className="w-5 h-5" />
           </button>
