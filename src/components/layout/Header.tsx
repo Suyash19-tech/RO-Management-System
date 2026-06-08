@@ -51,12 +51,22 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Sync state whenever storage event fires or dropdown opens
+  // Sync state whenever storage event fires, custom event fires, or dropdown opens
   useEffect(() => {
     if (isOpen) {
       fetchNotifications();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const handleSync = () => fetchNotifications();
+    window.addEventListener("storage", handleSync);
+    window.addEventListener("notifications_updated", handleSync);
+    return () => {
+      window.removeEventListener("storage", handleSync);
+      window.removeEventListener("notifications_updated", handleSync);
+    };
+  }, []);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -78,6 +88,7 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
     const updated = [...dismissed, id];
     localStorage.setItem("dismissed_notifications", JSON.stringify(updated));
     setNotifications(prev => prev.filter(n => n.id !== id));
+    window.dispatchEvent(new Event("notifications_updated"));
   };
 
   const activeCount = notifications.length;

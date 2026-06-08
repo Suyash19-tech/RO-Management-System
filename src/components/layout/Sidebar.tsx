@@ -134,13 +134,17 @@ export function Sidebar({ isOpen, toggleSidebar }: { isOpen: boolean, toggleSide
     return () => clearInterval(interval);
   }, []);
 
-  // Sync count on local storage triggers
+  // Sync count on local storage triggers and custom event
   useEffect(() => {
     const handleStorageChange = () => {
       fetchNotificationCount();
     };
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener("notifications_updated", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("notifications_updated", handleStorageChange);
+    };
   }, []);
 
   return (
