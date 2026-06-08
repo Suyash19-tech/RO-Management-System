@@ -25,6 +25,7 @@ export default function TicketDetailScreen() {
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [rescheduleSlot, setRescheduleSlot] = useState("");
   const [isRescheduling, setIsRescheduling] = useState(false);
+  const [showCustomerRescheduleForm, setShowCustomerRescheduleForm] = useState(false);
 
   useEffect(() => {
     fetchProfile().then(p => setProfile(p));
@@ -65,12 +66,23 @@ export default function TicketDetailScreen() {
   const handleRescheduleSubmit = async () => {
     if (!rescheduleDate || !rescheduleSlot) return;
     setIsRescheduling(true);
-    const success = await rescheduleTicket(ticket.rawId, rescheduleDate, rescheduleSlot);
+    
+    // If ticket was already confirmed (ASSIGNED/ACCEPTED) and the customer initiates this, it uses their 1-time limit.
+    const isAfterConfirmation = (ticket.status === 'ASSIGNED' || ticket.status === 'ACCEPTED');
+    const isCustomerInitiated = showCustomerRescheduleForm;
+    const incrementReschedule = isCustomerInitiated && isAfterConfirmation;
+
+    const success = await rescheduleTicket(ticket.rawId, rescheduleDate, rescheduleSlot, incrementReschedule);
     if (success) {
       alert("Reschedule request submitted successfully.");
-      setTicket({ ...ticket, status: "CREATED" });
+      setTicket({ 
+        ...ticket, 
+        status: "CREATED", 
+        rescheduleCount: ticket.rescheduleCount + (incrementReschedule ? 1 : 0) 
+      });
       setRescheduleDate("");
       setRescheduleSlot("");
+      setShowCustomerRescheduleForm(false);
     } else {
       alert("Failed to submit reschedule request.");
     }
@@ -178,6 +190,75 @@ export default function TicketDetailScreen() {
             <p className="text-sm font-medium leading-relaxed mt-2 text-blue-100">
               We will assign you a technician as soon as we get confirmation for your appointment.
             </p>
+          </motion.div>
+        )}
+
+        {/* Customer Reschedule Button & Form */}
+        {ticket.status !== 'COMPLETED' && ticket.status !== 'RESCHEDULE_REQUESTED' && !showCustomerRescheduleForm && (
+          (ticket.status === 'CREATED') || 
+          ((ticket.status === 'ASSIGNED' || ticket.status === 'ACCEPTED') && ticket.rescheduleCount < 1)
+        ) && (
+          <motion.div variants={item}>
+            <button 
+              onClick={() => setShowCustomerRescheduleForm(true)}
+              className="w-full py-3.5 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2 mt-2"
+            >
+              <CalendarDays className="w-5 h-5 text-slate-400" />
+              Reschedule Appointment
+            </button>
+          </motion.div>
+        )}
+
+        {showCustomerRescheduleForm && (
+          <motion.div variants={item} className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm relative overflow-hidden mt-2">
+            <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2"><CalendarDays className="w-5 h-5 text-slate-400"/> Reschedule Appointment</h3>
+            <div className="space-y-4 border-t border-slate-100 pt-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">Select Date</label>
+                <input 
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={rescheduleDate}
+                  onChange={(e) => setRescheduleDate(e.target.value)}
+                  className="w-full bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 font-bold text-slate-800 outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition-all"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">Preferred Time Slot</label>
+                <select 
+                  value={rescheduleSlot}
+                  onChange={(e) => setRescheduleSlot(e.target.value)}
+                  className="w-full bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 font-bold text-slate-800 outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition-all appearance-none"
+                >
+                  <option value="" disabled>-- Select Time Slot --</option>
+                  <option value="Morning (10AM-12PM)">Morning (10:00 AM – 12:00 PM)</option>
+                  <option value="Afternoon (12PM-3PM)">Afternoon (12:00 PM – 3:00 PM)</option>
+                  <option value="Evening (3PM-6PM)">Evening (3:00 PM – 6:00 PM)</option>
+                  <option value="Night (After 6PM)">Night (After 6:00 PM)</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button 
+                  onClick={() => {
+                    setShowCustomerRescheduleForm(false);
+                    setRescheduleDate("");
+                    setRescheduleSlot("");
+                  }}
+                  className="flex-1 py-3.5 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleRescheduleSubmit}
+                  disabled={!rescheduleDate || !rescheduleSlot || isRescheduling}
+                  className="flex-[2] py-3.5 bg-[#0B1B3D] hover:bg-slate-900 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-lg shadow-slate-900/20 transition-all flex items-center justify-center gap-2"
+                >
+                  {isRescheduling ? "Submitting..." : <><Send className="w-4 h-4" /> Confirm</>}
+                </button>
+              </div>
+            </div>
           </motion.div>
         )}
 

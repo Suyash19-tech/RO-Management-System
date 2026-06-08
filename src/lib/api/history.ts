@@ -26,6 +26,7 @@ export interface Ticket {
     timestamp: string;
     description: string;
   }>;
+  rescheduleCount: number;
 }
 
 export const fetchTickets = async (): Promise<Ticket[]> => {
@@ -95,7 +96,8 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
       paymentStatus: apt.paymentStatus || undefined,
       costCharged: apt.costCharged || 0,
       completedAt: apt.completedAt || apt.date,
-      timeline
+      timeline,
+      rescheduleCount: apt.rescheduleCount || 0
     };
   }).sort((a: Ticket, b: Ticket) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 };
@@ -105,7 +107,7 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
   return tickets.find(t => t.id === id) || null;
 };
 
-export const rescheduleTicket = async (rawId: string, newDate: string, newTime: string): Promise<boolean> => {
+export const rescheduleTicket = async (rawId: string, newDate: string, newTime: string, incrementReschedule?: boolean): Promise<boolean> => {
   try {
     const res = await fetch(`http://localhost:3000/api/appointments/${rawId}`, {
       method: 'PUT',
@@ -114,7 +116,8 @@ export const rescheduleTicket = async (rawId: string, newDate: string, newTime: 
         date: newDate,
         time: newTime,
         status: 'Pending',
-        remarks: `Customer selected new slot: ${newDate} ${newTime}`
+        remarks: `Customer selected new slot: ${newDate} ${newTime}`,
+        ...(incrementReschedule && { incrementReschedule: true })
       })
     });
     return res.ok;
