@@ -47,7 +47,7 @@ export const createTicket = async (payload: CreateTicketPayload): Promise<Ticket
     } catch(e) {}
 
     return {
-      ticketId: "TKT-" + data.id.slice(0, 4).toUpperCase(),
+      ticketId: "TKT-" + data.id.slice(-6).toUpperCase(),
       expectedResponseTime: "Within 2 Hours",
       status: "CREATED"
     };
