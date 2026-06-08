@@ -69,7 +69,15 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
     
     if (apt.status === "Reschedule Requested") {
       timeline.push({ status: "RESCHEDULE_REQUESTED" as TicketStatus, timestamp: new Date().toISOString(), description: `Admin requested reschedule.` });
-    } else if (status !== "CREATED" && status !== "RESCHEDULE_REQUESTED") {
+    } else if (apt.rescheduleCount > 0) {
+      timeline.push({ status: "ACCEPTED" as TicketStatus, timestamp: apt.createdAt, description: `Initial appointment confirmed.` });
+      timeline.push({ status: "RESCHEDULE_REQUESTED" as TicketStatus, timestamp: apt.updatedAt || new Date().toISOString(), description: `Customer rescheduled appointment.` });
+      
+      if (status !== "CREATED") {
+        timeline.push({ status: "ASSIGNED" as TicketStatus, timestamp: apt.updatedAt || apt.createdAt, description: `Assigned to ${apt.tech || 'Technician'}.` });
+        timeline.push({ status: "ACCEPTED" as TicketStatus, timestamp: apt.updatedAt || apt.createdAt, description: `New service appointment confirmed.` });
+      }
+    } else if (status !== "CREATED") {
       timeline.push({ status: "ASSIGNED" as TicketStatus, timestamp: apt.createdAt, description: `Assigned to ${apt.tech || 'Technician'}.` });
       timeline.push({ status: "ACCEPTED" as TicketStatus, timestamp: apt.createdAt, description: `Service appointment confirmed.` });
     }
@@ -116,6 +124,7 @@ export const rescheduleTicket = async (rawId: string, newDate: string, newTime: 
         date: newDate,
         time: newTime,
         status: 'Pending',
+        tech: 'Unassigned',
         remarks: `Customer selected new slot: ${newDate} ${newTime}`,
         ...(incrementReschedule && { incrementReschedule: true })
       })

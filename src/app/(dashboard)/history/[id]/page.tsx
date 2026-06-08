@@ -194,10 +194,7 @@ export default function TicketDetailScreen() {
         )}
 
         {/* Customer Reschedule Button & Form */}
-        {ticket.status !== 'COMPLETED' && ticket.status !== 'RESCHEDULE_REQUESTED' && !showCustomerRescheduleForm && (
-          (ticket.status === 'CREATED') || 
-          ((ticket.status === 'ASSIGNED' || ticket.status === 'ACCEPTED') && ticket.rescheduleCount < 1)
-        ) && (
+        {ticket.status !== 'COMPLETED' && ticket.status !== 'RESCHEDULE_REQUESTED' && !showCustomerRescheduleForm && ticket.rescheduleCount < 1 && (
           <motion.div variants={item}>
             <button 
               onClick={() => setShowCustomerRescheduleForm(true)}
