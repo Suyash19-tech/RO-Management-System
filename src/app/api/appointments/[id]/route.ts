@@ -29,6 +29,7 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
           ...(data.costCharged !== undefined && { costCharged: parseFloat(data.costCharged) }),
           ...(data.paymentStatus !== undefined && { paymentStatus: data.paymentStatus }),
           ...(data.completedAt !== undefined && { completedAt: new Date(data.completedAt) }),
+          ...(data.incrementReschedule && { rescheduleCount: { increment: 1 } }),
         },
       });
 
