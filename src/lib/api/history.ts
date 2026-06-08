@@ -37,7 +37,9 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
 
   // Sync with backend to get latest admin changes (status, assigned tech, remarks)
   try {
-    const res = await fetch(`http://localhost:3000/api/customers/${encodeURIComponent(parsed.phone)}`);
+    const res = await fetch(`http://localhost:3000/api/customers/${encodeURIComponent(parsed.phone)}`, {
+      cache: 'no-store'
+    });
     if (res.ok) {
       const freshProfile = await res.json();
       localStorage.setItem("customer_profile", JSON.stringify(freshProfile));
@@ -82,7 +84,7 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
       status: status,
       createdAt: apt.createdAt,
       scheduledSlot: apt.time,
-      technician: apt.tech ? {
+      technician: apt.tech && apt.tech !== 'Unassigned' ? {
         name: apt.tech,
         phone: "N/A",
       } : undefined,

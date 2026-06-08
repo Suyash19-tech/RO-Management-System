@@ -171,6 +171,16 @@ export default function TicketDetailScreen() {
           </motion.div>
         )}
 
+        {!ticket.technician && ticket.status !== 'COMPLETED' && ticket.status !== 'RESCHEDULE_REQUESTED' && (
+          <motion.div variants={item} className="bg-[#0B1B3D] text-white p-5 rounded-2xl shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full -mr-10 -mt-10 blur-xl pointer-events-none" />
+            <h3 className="text-xs font-bold text-blue-200 uppercase tracking-widest mb-1.5 opacity-80">Technician Details</h3>
+            <p className="text-sm font-medium leading-relaxed mt-2 text-blue-100">
+              We will assign you a technician as soon as we get confirmation for your appointment.
+            </p>
+          </motion.div>
+        )}
+
         {ticket.status === 'COMPLETED' && (
           <motion.div variants={item} className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100/50 p-6 rounded-[24px] shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-200/30 rounded-full -mr-10 -mt-10 blur-xl pointer-events-none" />
