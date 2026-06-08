@@ -1,4 +1,5 @@
 "use client";
+import toast from "react-hot-toast";
 
 import { Phone, Star, Trash2, Power } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
@@ -81,7 +82,7 @@ export function TechniciansTable({ search, refreshTrigger, onRefresh }: Technici
       onRefresh();
     } catch (err) {
       console.error(err);
-      alert("Failed to update status.");
+      toast.error("Failed to update status.");
     } finally {
       setTogglingId(null);
     }
@@ -97,11 +98,11 @@ export function TechniciansTable({ search, refreshTrigger, onRefresh }: Technici
       });
 
       if (!res.ok) throw new Error("Failed to delete technician");
-      alert(`${tech.name} has been removed.`);
+      toast.success(`${tech.name} has been removed.`);
       onRefresh();
     } catch (err) {
       console.error(err);
-      alert("Failed to delete technician. They may be linked to active service appointments.");
+      toast.error("Failed to delete technician. They may be linked to active service appointments.");
     }
   };
 

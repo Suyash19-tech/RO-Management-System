@@ -1,4 +1,5 @@
 "use client";
+import toast from "react-hot-toast";
 // AppointmentsTable — Step Wizard + Invoice
 
 import {
@@ -10,7 +11,7 @@ import {
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-/* ─────────────── Types ─────────────── */
+/* --------------- Types --------------- */
 type LineItem = { name: string; qty: number; cost: number };
 export type Appointment = {
   id: string;
@@ -31,7 +32,7 @@ export type Appointment = {
   customer?: { installations: { servicesCount: number }[] } | null;
 };
 
-/* ─────────────── Helpers ─────────────── */
+/* --------------- Helpers --------------- */
 function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" | "lg" }) {
   const sz = size === "sm" ? "w-8 h-8 text-xs" : size === "lg" ? "w-14 h-14 text-lg" : "w-10 h-10 text-sm";
   if (!name || name === "Unassigned")
@@ -265,7 +266,7 @@ function CompletionWizard({
       onDone(); // refresh + switch tab
     } catch {
       setSaving(false);
-      alert("Failed to save. Please try again.");
+      toast.error("Failed to save. Please try again.");
     }
   };
 
@@ -634,7 +635,7 @@ export function AppointmentsTable() {
       fetchAll();
     } catch (err) {
       console.error(err);
-      alert("Failed to assign technician");
+      toast.error("Failed to assign technician");
     }
   };
 

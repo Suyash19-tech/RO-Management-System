@@ -1,4 +1,5 @@
 "use client";
+import toast from "react-hot-toast";
 
 import { 
   MoreVertical, Eye, RefreshCw, Bell, MapPin, CalendarDays, 
@@ -10,7 +11,7 @@ import {
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
-/* ─────────────── Types ─────────────── */
+/* --------------- Types --------------- */
 type Amc = {
   id: string;
   customerName: string;
@@ -44,7 +45,7 @@ type Toast = {
   type: "success" | "info" | "warning";
 };
 
-/* ─────────────── Avatars & Badges ─────────────── */
+/* --------------- Avatars & Badges --------------- */
 function Avatar({ name }: { name: string }) {
   const colors = ["bg-sky-100 text-sky-700", "bg-purple-100 text-purple-700", "bg-rose-100 text-rose-700", "bg-amber-100 text-amber-700", "bg-emerald-100 text-emerald-700"];
   const color = colors[name.length % colors.length];
@@ -123,12 +124,12 @@ export function AmcPaymentModal({
     e.preventDefault();
     const parsedAmount = Number(payAmount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      alert("Please enter a valid positive amount.");
+      toast.error("Please enter a valid positive amount.");
       return;
     }
 
     if (parsedAmount > currentBalance) {
-      alert(`Amount entered (₹${parsedAmount}) exceeds the remaining balance (₹${currentBalance}).`);
+      toast.error(`Amount entered (₹${parsedAmount}) exceeds the remaining balance (₹${currentBalance}).`);
       return;
     }
 
@@ -154,11 +155,11 @@ export function AmcPaymentModal({
         onUpdate();
         onClose();
       } else {
-        alert("Failed to update payment.");
+        toast.error("Failed to update payment.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error occurred while saving payment.");
+      toast.error("Error occurred while saving payment.");
     } finally {
       setSubmitting(false);
     }
@@ -450,7 +451,7 @@ export function AMCTable() {
   // Refs
   const customerDropdownRef = useRef<HTMLDivElement>(null);
 
-  /* ─────────────── Effects ─────────────── */
+  /* --------------- Effects --------------- */
   useEffect(() => {
     fetchAMCs();
     fetchCustomers();
@@ -467,7 +468,7 @@ export function AMCTable() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* ─────────────── Data Fetching ─────────────── */
+  /* --------------- Data Fetching --------------- */
   const fetchAMCs = async () => {
     try {
       const res = await fetch('/api/amc');
@@ -513,7 +514,7 @@ export function AMCTable() {
     }
   };
 
-  /* ─────────────── Toast System ─────────────── */
+  /* --------------- Toast System --------------- */
   const showToast = (message: string, type: "success" | "info" | "warning" = "success") => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type }]);
@@ -522,7 +523,7 @@ export function AMCTable() {
     }, 4000);
   };
 
-  /* ─────────────── Event Handlers ─────────────── */
+  /* --------------- Event Handlers --------------- */
   const handleDeleteAmc = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this AMC contract? This cannot be undone.")) return;
     
@@ -712,7 +713,7 @@ export function AMCTable() {
     }
   };
 
-  /* ─────────────── Date Helpers ─────────────── */
+  /* --------------- Date Helpers --------------- */
   const calculateEndDate = (startStr: string, planName: string) => {
     if (!startStr) return "";
     const date = new Date(startStr);
@@ -765,7 +766,7 @@ export function AMCTable() {
     setIsRenewModalOpen(true);
   };
 
-  /* ─────────────── Autocomplete Customer Selector ─────────────── */
+  /* --------------- Autocomplete Customer Selector --------------- */
   const selectCustomer = (cust: Customer) => {
     setAddForm(prev => ({
       ...prev,
@@ -795,14 +796,14 @@ export function AMCTable() {
     c.phone.includes(customerSearchQuery)
   );
 
-  /* ─────────────── Statistics Computations ─────────────── */
+  /* --------------- Statistics Computations --------------- */
   const totalCount = amcData.length;
   const activeCount = amcData.filter(item => item.status === "Active").length;
   const expiringCount = amcData.filter(item => item.status === "Expiring Soon").length;
   const expiredCount = amcData.filter(item => item.status === "Expired").length;
   const pendingPaymentCount = amcData.filter(item => item.payment === "Pending").length;
 
-  /* ─────────────── Table Filter Client Logic ─────────────── */
+  /* --------------- Table Filter Client Logic --------------- */
   const filteredAmcs = amcData.filter(item => {
     const matchesSearch = 
       item.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||

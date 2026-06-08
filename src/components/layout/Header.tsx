@@ -133,6 +133,15 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
     window.dispatchEvent(new Event("notifications_updated"));
   };
 
+  const dismissAll = () => {
+    const dismissed = getDismissedIds();
+    const allIds = notifications.map(n => n.id);
+    const updated = [...new Set([...dismissed, ...allIds])];
+    localStorage.setItem("dismissed_notifications", JSON.stringify(updated));
+    setNotifications([]);
+    window.dispatchEvent(new Event("notifications_updated"));
+  };
+
   const activeCount = notifications.length;
 
   return (
@@ -141,8 +150,6 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
         <button onClick={toggleSidebar} className="text-slate-500 hover:text-slate-900 transition-colors p-1 hover:bg-slate-100 rounded-lg">
           <Menu className="w-6 h-6" />
         </button>
-        
-
       </div>
 
       <div className="flex items-center gap-5">
@@ -173,13 +180,23 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
                     {activeCount > 0 ? `${activeCount} items require your attention` : "All systems normal"}
                   </p>
                 </div>
-                <Link 
-                  href="/dashboard/notifications" 
-                  onClick={() => setIsOpen(false)}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
-                >
-                  View All
-                </Link>
+                <div className="flex items-center gap-3">
+                  {activeCount > 0 && (
+                    <button 
+                      onClick={dismissAll}
+                      className="text-xs font-bold text-slate-500 hover:text-slate-700 hover:underline"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                  <Link 
+                    href="/dashboard/notifications" 
+                    onClick={() => setIsOpen(false)}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    View All
+                  </Link>
+                </div>
               </div>
 
               <div className="divide-y divide-slate-50 max-h-[350px] overflow-y-auto">
@@ -199,7 +216,7 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
                       <Link
                         href={item.link}
                         onClick={() => setIsOpen(false)}
-                        className="flex-1 min-w-0 pr-6 block"
+                        className="flex-1 min-w-0 pr-8 block"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-xs font-extrabold text-slate-900 truncate">{item.title}</p>
@@ -217,8 +234,8 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
                           e.preventDefault();
                           handleDismissSingle(item.id);
                         }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg border border-slate-100 hover:border-emerald-200 text-slate-400 transition-all opacity-0 group-hover/item:opacity-100 active:scale-95 cursor-pointer"
-                        title="Dismiss alert"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg border border-slate-100 hover:border-emerald-200 text-slate-400 transition-all md:opacity-0 md:group-hover/item:opacity-100 active:scale-95 cursor-pointer"
+                        title="Mark as read"
                       >
                         <Check className="w-3.5 h-3.5" />
                       </button>

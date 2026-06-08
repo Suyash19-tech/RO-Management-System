@@ -1,4 +1,5 @@
 "use client";
+import toast from "react-hot-toast";
 
 import { Calendar, CheckCircle2, XCircle, MapPin, Wrench } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -101,7 +102,7 @@ export function InstallationsTable({ searchTerm = "" }: { searchTerm?: string })
       fetchData();
     } catch (err) {
       console.error(err);
-      alert("Failed to assign technician");
+      toast.error("Failed to assign technician");
     }
   };
 

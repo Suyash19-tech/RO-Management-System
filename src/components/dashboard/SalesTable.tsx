@@ -9,7 +9,7 @@ import {
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
-/* ─── Types ─────────────────────────────────────────── */
+/* --- Types ------------------------------------------- */
 type EntryType = "Installation" | "Service" | "AMC";
 type PayStatus = "Paid" | "Partial" | "Unpaid" | "Free";
 
@@ -41,7 +41,7 @@ type Summary = {
   amcCount: number;
 };
 
-/* ─── Helpers ───────────────────────────────────────── */
+/* --- Helpers ----------------------------------------- */
 const fmt = (n: number) =>
   "₹" + n.toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
@@ -93,7 +93,7 @@ function PayBadge({ status }: { status: string }) {
   );
 }
 
-/* ─── Summary Card ──────────────────────────────────── */
+/* --- Summary Card ------------------------------------ */
 function SummaryCard({
   label, value, sub, icon: Icon, color, trend
 }: {

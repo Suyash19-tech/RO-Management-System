@@ -1,4 +1,5 @@
 "use client";
+import toast from "react-hot-toast";
 
 import { useState, useEffect } from "react";
 import { Plus, Search, Filter, Download, X, Check, Server, Shield, Cog, Receipt, User as UserIcon, MapPin, IndianRupee, CreditCard, Banknote, Wallet, FileText, ChevronRight, ChevronLeft } from "lucide-react";
@@ -103,13 +104,13 @@ export default function InstallationsPage() {
   const nextStep = () => {
     if (currentStep === 1) {
       if (!form.name || !form.phone || !form.address) {
-        alert("Please fill in Name, Phone, and Address before proceeding.");
+        toast.error("Please fill in Name, Phone, and Address before proceeding.");
         return;
       }
     }
     if (currentStep === 2) {
       if (!form.modelName) {
-        alert("Please select an RO Machine before proceeding.");
+        toast.error("Please select an RO Machine before proceeding.");
         return;
       }
       // Auto-fill amount paid to total if moving to step 3 initially
@@ -127,7 +128,7 @@ export default function InstallationsPage() {
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!form.name || !form.phone || !form.address || !form.modelName) {
-      alert("Missing required fields.");
+      toast.error("Missing required fields.");
       return;
     }
 
@@ -169,7 +170,7 @@ export default function InstallationsPage() {
          const msg = dueAmt > 0
            ? `Customer Onboarded! ₹${paidAmt.toFixed(2)} collected. Balance due: ₹${dueAmt.toFixed(2)}`
            : `Customer Onboarded! Full payment of ₹${paidAmt.toFixed(2)} collected.`;
-         alert(msg);
+         toast.error(msg);
       }
 
       // Reset form
@@ -187,7 +188,7 @@ export default function InstallationsPage() {
       fetchOptions();
     } catch (err) {
       console.error(err);
-      alert("Failed to onboard customer.");
+      toast.error("Failed to onboard customer.");
     } finally {
       setSubmitting(false);
     }

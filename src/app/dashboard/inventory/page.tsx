@@ -40,7 +40,7 @@ function stockStatus(p: Product): "out" | "low" | "ok" {
   return "ok";
 }
 
-// ─── Stock Status Badge ──────────────────────────────────────────────────────
+// --- Stock Status Badge ------------------------------------------------------
 function StockBadge({ product }: { product: Product }) {
   const status = stockStatus(product);
   if (product.category === "AMC Plan") return (
@@ -65,7 +65,7 @@ function StockBadge({ product }: { product: Product }) {
   );
 }
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
+// --- Stat Card ----------------------------------------------------------------
 function StatCard({ icon, label, value, color }: {
   icon: React.ReactNode; label: string; value: string | number; color: string;
 }) {
@@ -82,7 +82,7 @@ function StatCard({ icon, label, value, color }: {
   );
 }
 
-// ─── Stock Adjust Modal ───────────────────────────────────────────────────────
+// --- Stock Adjust Modal -------------------------------------------------------
 function StockAdjustModal({ product, onClose, onUpdated }: {
   product: Product;
   onClose: () => void;
@@ -248,7 +248,7 @@ function StockAdjustModal({ product, onClose, onUpdated }: {
   );
 }
 
-// ─── Main Inventory Page ───────────────────────────────────────────────────────
+// --- Main Inventory Page -------------------------------------------------------
 export default function InventoryPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

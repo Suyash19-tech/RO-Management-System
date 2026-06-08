@@ -1,4 +1,5 @@
 "use client";
+import toast from "react-hot-toast";
 
 import { useState } from "react";
 import { CheckCircle2, Receipt, AlertCircle, Trash2, Calendar, ShoppingBag, Check } from "lucide-react";
@@ -106,7 +107,7 @@ export function ExpensesTable({ expenses, onRefresh, search, filterCategory, fil
       onRefresh();
     } catch (err) {
       console.error(err);
-      alert("Failed to delete expense");
+      toast.error("Failed to delete expense");
     }
   };
 

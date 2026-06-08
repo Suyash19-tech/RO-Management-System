@@ -1,4 +1,5 @@
 "use client";
+import toast from "react-hot-toast";
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -84,10 +85,10 @@ export default function CustomerProfilePage() {
       
       await fetchProfile();
       setIsEditModalOpen(false);
-      alert("Profile updated successfully!");
+      toast.success("Profile updated successfully!");
     } catch (err) {
       console.error(err);
-      alert("Failed to save changes.");
+      toast.error("Failed to save changes.");
     } finally {
       setIsSaving(false);
     }
@@ -168,7 +169,7 @@ export default function CustomerProfilePage() {
               if (latestInstallation) {
                 setInvoiceInst(latestInstallation);
               } else {
-                alert("No installations found to generate an invoice for.");
+                toast.error("No installations found to generate an invoice for.");
               }
             }}
             disabled={!latestInstallation}

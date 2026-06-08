@@ -1,4 +1,5 @@
 "use client";
+import toast from "react-hot-toast";
 
 import { MapPin, Calendar, Clock, User, Wrench, ChevronRight, FileText, CheckCircle2, AlertCircle, X, Check } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -166,7 +167,7 @@ export function ServicesTable() {
     } catch (error) {
       console.error("Failed to update appointment", error);
       setNotifying(false);
-      alert("Failed to confirm appointment.");
+      toast.error("Failed to confirm appointment.");
     }
   };
 
@@ -198,7 +199,7 @@ export function ServicesTable() {
     } catch (error) {
       console.error("Failed to request reschedule", error);
       setNotifying(false);
-      alert("Failed to request reschedule.");
+      toast.error("Failed to request reschedule.");
     }
   };
 

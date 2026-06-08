@@ -1,4 +1,5 @@
 "use client";
+import toast from "react-hot-toast";
 
 import {
   Package, Search, Filter, Download, Plus, Edit2, Trash2, Eye,
@@ -9,7 +10,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// --- Types --------------------------------------------------------------------
 type Product = {
   id: string;
   name: string;
@@ -60,7 +61,7 @@ function getCategoryColor(cat: string) {
   return match ? match.color : "bg-slate-50 text-slate-700 border-slate-200";
 }
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
+// --- Status Badge -------------------------------------------------------------
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { cls: string; dot: string }> = {
     Active: {
@@ -85,7 +86,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ─── Stock Status Badge ───────────────────────────────────────────────────────
+// --- Stock Status Badge -------------------------------------------------------
 function StockBadge({ stock, category }: { stock: number; category: string }) {
   // AMC plans don't have finite stock concerns
   if (category === "AMC Plan") {
@@ -117,7 +118,7 @@ function StockBadge({ stock, category }: { stock: number; category: string }) {
   );
 }
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
+// --- Stat Card ----------------------------------------------------------------
 function StatCard({ icon, label, value, sub, color }: {
   icon: React.ReactNode; label: string; value: string | number; sub?: string; color: string;
 }) {
@@ -135,7 +136,7 @@ function StatCard({ icon, label, value, sub, color }: {
   );
 }
 
-// ─── Product Form Modal ───────────────────────────────────────────────────────
+// --- Product Form Modal -------------------------------------------------------
 function ProductModal({
   mode, product, onClose, onSave, allCategories,
 }: {
@@ -422,7 +423,7 @@ function ProductModal({
   );
 }
 
-// ─── View Modal ────────────────────────────────────────────────────────────────
+// --- View Modal ----------------------------------------------------------------
 function ViewModal({ product, onClose, onEdit }: { product: Product; onClose: () => void; onEdit: () => void }) {
   const price = product.price || 0;
   const purchasePrice = product.purchasePrice || 0;
@@ -526,7 +527,7 @@ function ViewModal({ product, onClose, onEdit }: { product: Product; onClose: ()
   );
 }
 
-// ─── Delete Confirm ────────────────────────────────────────────────────────────
+// --- Delete Confirm ------------------------------------------------------------
 function DeleteModal({ product, onClose, onDeleted }: { product: Product; onClose: () => void; onDeleted: () => void }) {
   const [deleting, setDeleting] = useState(false);
 
@@ -537,7 +538,7 @@ function DeleteModal({ product, onClose, onDeleted }: { product: Product; onClos
       onDeleted();
       onClose();
     } catch {
-      alert("Failed to delete product.");
+      toast.error("Failed to delete product.");
     } finally {
       setDeleting(false);
     }
@@ -573,7 +574,7 @@ function DeleteModal({ product, onClose, onDeleted }: { product: Product; onClos
   );
 }
 
-// ─── Main Page ─────────────────────────────────────────────────────────────────
+// --- Main Page -----------------------------------------------------------------
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
