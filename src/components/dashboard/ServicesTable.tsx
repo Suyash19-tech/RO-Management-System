@@ -70,10 +70,10 @@ export function ServicesTable() {
   // Fetch only PENDING appointments (unconfirmed service requests)
   const fetchAppointments = async () => {
     try {
-      const res = await fetch('/api/appointments?status=Pending');
+      const res = await fetch('/api/appointments');
       const data = await res.json();
       // Filter client-side too as safety net
-      const pending = Array.isArray(data) ? data.filter((a: Appointment) => a.status === 'Pending') : [];
+      const pending = Array.isArray(data) ? data.filter((a: Appointment) => a.status === 'Pending' || a.status === 'Reschedule Requested') : [];
       setAppointments(pending);
       setLoading(false);
     } catch (err) {
@@ -234,7 +234,14 @@ export function ServicesTable() {
             <div className="flex-1 bg-slate-50 rounded-xl p-3 border border-slate-100 mb-4 flex flex-col justify-center">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Issue / Query</span>
               <p className="font-semibold text-slate-800">{apt.type}</p>
-              <p className="text-xs text-slate-500 mt-1">Logged: {new Date(apt.createdAt).toLocaleDateString()}</p>
+              <div className="flex justify-between items-center mt-1">
+                <p className="text-xs text-slate-500">Logged: {new Date(apt.createdAt).toLocaleDateString()}</p>
+                {apt.status === "Reschedule Requested" && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">
+                    <Clock className="w-3 h-3" /> Waiting
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center justify-between pt-3 border-t border-slate-100">
@@ -391,7 +398,6 @@ export function ServicesTable() {
                   />
                 </div>
 
-                {/* Confirm Button */}
                 {notified ? (
                   <div className="w-full p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
@@ -400,6 +406,16 @@ export function ServicesTable() {
                     <div>
                       <p className="font-bold text-emerald-800">Appointment Confirmed!</p>
                       <p className="text-sm font-medium text-emerald-600">SMS / WhatsApp Notification sent to customer.</p>
+                    </div>
+                  </div>
+                ) : selectedApt.status === "Reschedule Requested" ? (
+                  <div className="w-full p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                       <Clock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-amber-800">Waiting on Customer</p>
+                      <p className="text-sm font-medium text-amber-600">Customer has been requested to select a new slot.</p>
                     </div>
                   </div>
                 ) : (
