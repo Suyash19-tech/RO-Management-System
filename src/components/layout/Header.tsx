@@ -123,7 +123,7 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
 
           {/* Dropdown Menu */}
           {isOpen && (
-            <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in-50 slide-in-from-top-3 duration-250">
+            <div className="fixed top-[72px] left-4 right-4 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-3 sm:w-96 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in-50 slide-in-from-top-3 duration-250">
               <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex justify-between items-center">
                 <div>
                   <h4 className="font-extrabold text-slate-900 text-sm">System Alerts</h4>
