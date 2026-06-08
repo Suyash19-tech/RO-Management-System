@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, FileText, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { fetchTicketById, Ticket } from "@/lib/api/history";
+import { fetchTicketById, Ticket, rescheduleTicket } from "@/lib/api/history";
 import { fetchProfile } from "@/lib/api/profile";
 import { ServiceInvoiceModal } from "@/components/ui/InvoiceModal";
+import { AlertCircle, CalendarDays, Clock, Send } from "lucide-react";
 
 import { StatusTracker } from "@/components/history/StatusTracker";
 import { TechnicianCard } from "@/components/history/TechnicianCard";
@@ -19,6 +20,11 @@ export default function TicketDetailScreen() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showInvoice, setShowInvoice] = useState(false);
+
+  // Reschedule state
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleSlot, setRescheduleSlot] = useState("");
+  const [isRescheduling, setIsRescheduling] = useState(false);
 
   useEffect(() => {
     fetchProfile().then(p => setProfile(p));
@@ -56,6 +62,21 @@ export default function TicketDetailScreen() {
     show: { opacity: 1, transition: { staggerChildren: 0.1 } }
   } as const;
 
+  const handleRescheduleSubmit = async () => {
+    if (!rescheduleDate || !rescheduleSlot) return;
+    setIsRescheduling(true);
+    const success = await rescheduleTicket(ticket.rawId, rescheduleDate, rescheduleSlot);
+    if (success) {
+      alert("Reschedule request submitted successfully.");
+      setTicket({ ...ticket, status: "CREATED" });
+      setRescheduleDate("");
+      setRescheduleSlot("");
+    } else {
+      alert("Failed to submit reschedule request.");
+    }
+    setIsRescheduling(false);
+  };
+
   const item = {
     hidden: { opacity: 0, y: 15 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
@@ -87,7 +108,64 @@ export default function TicketDetailScreen() {
           <StatusTracker currentStatus={ticket.status} />
         </motion.div>
 
-        {ticket.technician && ticket.status !== 'COMPLETED' && (
+        {ticket.status === 'RESCHEDULE_REQUESTED' && (
+          <motion.div variants={item} className="bg-amber-50 border border-amber-200 p-5 rounded-2xl shadow-sm relative overflow-hidden">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="bg-amber-100 p-2 rounded-full shrink-0">
+                <AlertCircle className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-amber-900 leading-tight">Action Required</h3>
+                <p className="text-sm font-medium text-amber-700 mt-1">
+                  The admin has requested to reschedule your appointment. Please pick a new date and time.
+                </p>
+                {ticket.technicianRemarks && (
+                  <div className="mt-2 p-3 bg-amber-100/50 rounded-lg text-xs font-semibold text-amber-800 italic">
+                    "{ticket.technicianRemarks.split('| Customer:')[0].replace('Admin: ', '')}"
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4 border-t border-amber-200/50 pt-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-amber-800 uppercase tracking-widest flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5" /> Select Date</label>
+                <input 
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={rescheduleDate}
+                  onChange={(e) => setRescheduleDate(e.target.value)}
+                  className="w-full bg-white px-4 py-3 rounded-xl border border-amber-200 font-bold text-slate-800 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-amber-800 uppercase tracking-widest flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Preferred Time Slot</label>
+                <select 
+                  value={rescheduleSlot}
+                  onChange={(e) => setRescheduleSlot(e.target.value)}
+                  className="w-full bg-white px-4 py-3 rounded-xl border border-amber-200 font-bold text-slate-800 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all appearance-none"
+                >
+                  <option value="" disabled>-- Select Time Slot --</option>
+                  <option value="Morning (10AM-12PM)">Morning (10:00 AM – 12:00 PM)</option>
+                  <option value="Afternoon (12PM-3PM)">Afternoon (12:00 PM – 3:00 PM)</option>
+                  <option value="Evening (3PM-6PM)">Evening (3:00 PM – 6:00 PM)</option>
+                  <option value="Night (After 6PM)">Night (After 6:00 PM)</option>
+                </select>
+              </div>
+
+              <button 
+                onClick={handleRescheduleSubmit}
+                disabled={!rescheduleDate || !rescheduleSlot || isRescheduling}
+                className="w-full py-3.5 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white font-bold rounded-xl shadow-lg shadow-amber-600/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+              >
+                {isRescheduling ? "Submitting..." : <><Send className="w-4 h-4" /> Submit New Slot</>}
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {ticket.technician && ticket.status !== 'COMPLETED' && ticket.status !== 'RESCHEDULE_REQUESTED' && (
           <motion.div variants={item}>
             <TechnicianCard technician={ticket.technician} expectedSlot={ticket.scheduledSlot} />
           </motion.div>

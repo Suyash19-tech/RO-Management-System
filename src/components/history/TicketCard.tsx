@@ -13,13 +13,15 @@ const getStatusDetails = (status: string) => {
     case 'ASSIGNED': 
     case 'ACCEPTED':
       return { color: 'bg-indigo-50 text-indigo-600 border-indigo-200', icon: Clock };
+    case 'RESCHEDULE_REQUESTED':
+      return { color: 'bg-amber-50 text-amber-600 border-amber-200', icon: Clock, label: 'ACTION REQUIRED' };
     default: 
       return { color: 'bg-slate-50 text-slate-600 border-slate-200', icon: Clock };
   }
 };
 
 export function TicketCard({ ticket }: { ticket: Ticket }) {
-  const { color, icon: StatusIcon } = getStatusDetails(ticket.status);
+  const { color, icon: StatusIcon, label } = getStatusDetails(ticket.status);
 
   return (
     <Link href={`/history/${ticket.id}`} className="block group">
@@ -49,7 +51,7 @@ export function TicketCard({ ticket }: { ticket: Ticket }) {
               color
             )}>
               <StatusIcon className="w-3 h-3" />
-              {ticket.status.replace('_', ' ')}
+              {label || ticket.status.replace('_', ' ')}
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-slate-500">
