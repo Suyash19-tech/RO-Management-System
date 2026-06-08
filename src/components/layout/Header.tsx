@@ -14,6 +14,30 @@ interface Notification {
   read: boolean;
 }
 
+// Synthesize a cute, professional "pop/bloop" notification sound
+const playCutePop = () => {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+    
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (e) {}
+};
+
 export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -35,9 +59,27 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
       if (!res.ok) throw new Error("Failed to load notifications");
       const data = await res.json();
       
-      // Filter out dismissed notification IDs stored in localStorage
       const dismissed = getDismissedIds();
       const visible = data.filter((n: any) => !dismissed.includes(n.id));
+      
+      if (typeof window !== "undefined") {
+        const knownIds = JSON.parse(localStorage.getItem("admin_known_notifs") || "[]");
+        let hasNew = false;
+        const updatedKnownIds = [...knownIds];
+        
+        visible.forEach((n: any) => {
+          if (!knownIds.includes(n.id)) {
+            hasNew = true;
+            updatedKnownIds.push(n.id);
+          }
+        });
+
+        if (hasNew) {
+          localStorage.setItem("admin_known_notifs", JSON.stringify(updatedKnownIds));
+          playCutePop();
+        }
+      }
+      
       setNotifications(visible);
     } catch (error) {
       console.error(error);
