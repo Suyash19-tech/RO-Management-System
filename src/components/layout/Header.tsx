@@ -41,6 +41,7 @@ const playCutePop = () => {
 export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const getDismissedIds = (): string[] => {
@@ -271,12 +272,7 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
 
         {/* Dynamic Premium Logout Button on Left of Admin Info */}
         <button
-          onClick={async () => {
-            if (confirm("Are you sure you want to logout?")) {
-              await fetch("/api/auth/logout", { method: "POST" });
-              window.location.href = "/login";
-            }
-          }}
+          onClick={() => setShowLogoutModal(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-250 hover:border-rose-200 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-xl text-xs font-extrabold transition-all active:scale-95 cursor-pointer shadow-sm"
         >
           <LogOut className="w-3.5 h-3.5" />
@@ -299,6 +295,40 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
           </div>
         </div>
       </div>
+      {/* Custom Logout Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 pb-0">
+              <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
+                <LogOut className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-900 mb-2">Ready to leave?</h3>
+              <p className="text-slate-500 text-sm font-medium">
+                Are you sure you want to logout of the admin portal? You will need to sign in again to access the dashboard.
+              </p>
+            </div>
+            <div className="p-6 flex items-center justify-end gap-3">
+              <button 
+                onClick={() => setShowLogoutModal(false)}
+                className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={async () => {
+                  await fetch("/api/auth/logout", { method: "POST" });
+                  window.location.href = "/login";
+                }}
+                className="px-5 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md shadow-rose-600/20 transition-all active:scale-95 flex items-center gap-2"
+              >
+                <span>Log Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </header>
   );
 }

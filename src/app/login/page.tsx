@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -9,6 +9,48 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const vantaRef = useRef<HTMLDivElement>(null);
+  const [vantaEffect, setVantaEffect] = useState<any>(0);
+
+  useEffect(() => {
+    let vantaEffectInstance: any = null;
+    const initVanta = () => {
+      try {
+        if (!vantaEffectInstance && vantaRef.current && (window as any).VANTA) {
+          vantaEffectInstance = (window as any).VANTA.WAVES({
+            el: vantaRef.current,
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0x1e3a8a, // Match admin theme
+            shininess: 35.00,
+            waveHeight: 15.00,
+            waveSpeed: 0.75,
+            zoom: 0.65
+          });
+          setVantaEffect(vantaEffectInstance);
+        }
+      } catch (err) {
+        console.error("Vanta failed to load:", err);
+      }
+    };
+
+    const checkVanta = setInterval(() => {
+      if ((window as any).VANTA) {
+        initVanta();
+        clearInterval(checkVanta);
+      }
+    }, 100);
+
+    return () => {
+      clearInterval(checkVanta);
+      if (vantaEffectInstance) vantaEffectInstance.destroy();
+    };
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +86,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8FAFC] to-[#E2E8F0] flex items-center justify-center p-4">
+    <div ref={vantaRef} className="min-h-screen bg-gradient-to-br from-[#F8FAFC] to-[#E2E8F0] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-400/20 rounded-full blur-3xl pointer-events-none"></div>
