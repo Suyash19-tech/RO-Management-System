@@ -170,7 +170,9 @@ export default function InstallationsPage() {
          const msg = dueAmt > 0
            ? `Customer Onboarded! ₹${paidAmt.toFixed(2)} collected. Balance due: ₹${dueAmt.toFixed(2)}`
            : `Customer Onboarded! Full payment of ₹${paidAmt.toFixed(2)} collected.`;
-         toast.error(msg);
+         toast.success(msg);
+      } else {
+         toast.success("Customer Onboarded Successfully!");
       }
 
       // Reset form

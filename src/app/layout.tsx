@@ -10,6 +10,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Admin Dashboard | SardarJi RO",
   description: "Administrative portal for SardarJi RO",
+  icons: {
+    icon: "/Sardarji_RO_logo.png",
+  },
 };
 
 import { Toaster } from "react-hot-toast";
