@@ -18,6 +18,9 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Sardarji RO | Customer Portal",
   description: "Manage your RO services seamlessly.",
+  icons: {
+    icon: "/Sardarji_RO_logo.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

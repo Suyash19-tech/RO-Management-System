@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const SLIDES = [
   {
     id: 1,
-    image: "/Slideshow1.png",
+    image: "/slideshow1.png",
     gradient: "from-[#0052D4] via-[#003B9D] to-[#1a1a6e]",
     label: "Sardar Ji RO 1",
     sub: "Premium Water Purification",

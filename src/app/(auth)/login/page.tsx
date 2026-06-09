@@ -98,7 +98,7 @@ export default function LoginScreen() {
       try {
         // We call the admin portal API to verify if the customer exists
         // In local development, Admin Portal runs on 3000. 
-        const res = await fetch(`http://localhost:3000/api/customers/${phone}`);
+        const res = await fetch(`/admin-api/customers/${phone}`);
         if (!res.ok) {
           if (res.status === 404) {
             setError("Your account has not been activated. Please contact the administrator or wait until your installation is complete.");

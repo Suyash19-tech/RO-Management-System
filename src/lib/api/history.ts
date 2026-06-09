@@ -45,7 +45,7 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
 
   // Sync with backend to get latest admin changes (status, assigned tech, remarks)
   try {
-    const res = await fetch(`http://localhost:3000/api/customers/${encodeURIComponent(parsed.phone)}`, {
+    const res = await fetch(`/admin-api/customers/${encodeURIComponent(parsed.phone)}`, {
       cache: 'no-store'
     });
     if (res.ok) {
@@ -124,7 +124,7 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
 
 export const rescheduleTicket = async (rawId: string, newDate: string, newTime: string, incrementReschedule?: boolean): Promise<boolean> => {
   try {
-    const res = await fetch(`http://localhost:3000/api/appointments/${rawId}`, {
+    const res = await fetch(`/admin-api/appointments/${rawId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

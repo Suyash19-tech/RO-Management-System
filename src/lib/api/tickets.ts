@@ -21,7 +21,7 @@ export const createTicket = async (payload: CreateTicketPayload): Promise<Ticket
   if (!parsed) throw new Error("No customer profile found");
 
   try {
-    const res = await fetch("http://localhost:3000/api/appointments", {
+    const res = await fetch("/admin-api/appointments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

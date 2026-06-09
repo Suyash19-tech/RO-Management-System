@@ -33,7 +33,7 @@ export const fetchProfile = async (): Promise<UserProfile | null> => {
   
   // Attempt to fetch fresh data
   try {
-    const res = await fetch(`http://localhost:3000/api/customers/${parsed.phone}`);
+    const res = await fetch(`/admin-api/customers/${parsed.phone}`);
     if (res.ok) {
       const fresh = await res.json();
       localStorage.setItem("customer_profile", JSON.stringify(fresh));
@@ -79,7 +79,7 @@ export const updateProfile = async (data: Partial<UserProfile>) => {
   if (!parsed) return false;
 
   try {
-    const res = await fetch(`http://localhost:3000/api/customers/${parsed.phone}`, {
+    const res = await fetch(`/admin-api/customers/${parsed.phone}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
