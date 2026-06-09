@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { eventEmitter } from '@/lib/events';
 
 export async function PUT(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -73,6 +74,8 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
 
       return updatedApp;
     });
+
+    eventEmitter.emit('appointment_update', { id, action: 'update', appointment: updated });
 
     return NextResponse.json(updated);
   } catch (error: any) {

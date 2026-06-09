@@ -593,13 +593,26 @@ export function AppointmentsTable() {
   const [invoiceApt, setInvoiceApt] = useState<Appointment | null>(null);
 
   const { data: appData, mutate: mutateAppointments } = useSWR<Appointment[]>("/api/appointments", fetcher, {
-    refreshInterval: 5000,
     revalidateOnFocus: true,
   });
   const { data: techData } = useSWR<any[]>("/api/technicians", fetcher, {
-    refreshInterval: 5000,
     revalidateOnFocus: true,
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const eventSource = new EventSource('/api/events');
+    eventSource.onmessage = () => {
+      mutateAppointments();
+    };
+    eventSource.onerror = (err) => {
+      console.error('SSE Connection Error:', err);
+      eventSource.close();
+    };
+    return () => {
+      eventSource.close();
+    };
+  }, [mutateAppointments]);
 
   const loading = !appData && !techData;
   const all = Array.isArray(appData) ? appData : [];
@@ -620,16 +633,24 @@ export function AppointmentsTable() {
   const handleDone = () => { mutateAppointments(); setTab("completed"); };
 
   const handleAssignTech = async (id: string, techName: string) => {
+    const originalAppointments = appData;
+    const updatedAppointments = appData
+      ? appData.map((a: Appointment) => (a.id === id ? { ...a, tech: techName } : a))
+      : [];
+    mutateAppointments(updatedAppointments, false);
+
     try {
-      await fetch(`/api/appointments/${id}`, {
+      const res = await fetch(`/api/appointments/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tech: techName })
       });
+      if (!res.ok) throw new Error("API call failed");
       mutateAppointments();
     } catch (err) {
       console.error(err);
       toast.error("Failed to assign technician");
+      mutateAppointments(originalAppointments, false); // rollback on error
     }
   };
 

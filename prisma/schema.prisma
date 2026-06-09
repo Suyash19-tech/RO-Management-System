@@ -95,6 +95,8 @@ model Appointment {
   rescheduleCount Int       @default(0)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  @@index([status, date])
 }
 
 model InventoryItem {
@@ -134,6 +136,8 @@ model Installation {
   status         String    @default("Pending") // Pending, Scheduled, In Progress, Completed
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  @@index([tech, status])
 }
 
 model Technician {

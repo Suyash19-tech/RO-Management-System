@@ -13,7 +13,7 @@ export function withRateLimit(
       'anonymous';
     const identifier = `${ip}:${req.nextUrl.pathname}`;
 
-    const result = rateLimit(identifier, config);
+    const result = await rateLimit(identifier, config);
 
     if (!result.success) {
       return NextResponse.json(

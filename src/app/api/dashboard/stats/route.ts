@@ -34,51 +34,97 @@ export async function GET(request: Request) {
       startDate.setHours(0, 0, 0, 0);
     }
 
-    // 1. Tab Metric Calculations
-    const totalCustomers = await prisma.customer.count();
-    const totalProducts = await prisma.product.count();
-    const activeAmcs = await prisma.amc.count({ where: { status: 'Active' } });
-    
-    // Inventory alerts
-    const products = await prisma.product.findMany({
-      where: { category: { not: "AMC Plan" } }
-    });
-    const lowStockCount = products.filter(p => p.stock <= (p.threshold ?? 5)).length;
-
-    // Today's Scheduled Appointments
+    // Today's Scheduled Appointments date bounds
     const todayStart = new Date(now);
     todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date(now);
     todayEnd.setHours(23, 59, 59, 999);
 
-    const todayAppointments = await prisma.appointment.count({
-      where: {
-        date: { gte: todayStart, lte: todayEnd },
-        status: { in: ['Scheduled', 'In Progress'] }
-      }
-    });
+    // Run all database query metrics in a single parallel execution
+    const [
+      totalCustomers,
+      totalProducts,
+      activeAmcs,
+      products,
+      todayAppointments,
+      installations,
+      amcs,
+      appointments,
+      expenses,
+      completedCount,
+      pendingCount,
+      scheduledCount,
+      inProgressCount,
+      cancelledCount,
+      recentAppointments,
+      recentInstallations,
+      expiringAmcs,
+      topTechnicians
+    ] = await Promise.all([
+      prisma.customer.count(),
+      prisma.product.count(),
+      prisma.amc.count({ where: { status: 'Active' } }),
+      prisma.product.findMany({ where: { category: { not: "AMC Plan" } } }),
+      prisma.appointment.count({
+        where: {
+          date: { gte: todayStart, lte: todayEnd },
+          status: { in: ['Scheduled', 'In Progress'] }
+        }
+      }),
+      prisma.installation.findMany({
+        where: { createdAt: { gte: startDate, lte: endDate } }
+      }),
+      prisma.amc.findMany({
+        where: { createdAt: { gte: startDate, lte: endDate } }
+      }),
+      prisma.appointment.findMany({
+        where: { 
+          status: 'Completed',
+          completedAt: { gte: startDate, lte: endDate } 
+        }
+      }),
+      prisma.expense.findMany({
+        where: { date: { gte: startDate, lte: endDate } }
+      }),
+      prisma.appointment.count({
+        where: { status: 'Completed', createdAt: { gte: startDate, lte: endDate } }
+      }),
+      prisma.appointment.count({
+        where: { status: 'Pending', createdAt: { gte: startDate, lte: endDate } }
+      }),
+      prisma.appointment.count({
+        where: { status: 'Scheduled', createdAt: { gte: startDate, lte: endDate } }
+      }),
+      prisma.appointment.count({
+        where: { status: 'In Progress', createdAt: { gte: startDate, lte: endDate } }
+      }),
+      prisma.appointment.count({
+        where: { status: 'Cancelled', createdAt: { gte: startDate, lte: endDate } }
+      }),
+      prisma.appointment.findMany({
+        take: 5,
+        orderBy: { date: 'desc' },
+        include: { customer: true }
+      }),
+      prisma.installation.findMany({
+        take: 5,
+        orderBy: { date: 'desc' }
+      }),
+      prisma.amc.findMany({
+        take: 5,
+        where: { status: { in: ['Expiring Soon', 'Expired'] } },
+        orderBy: { endDate: 'asc' }
+      }),
+      prisma.technician.findMany({
+        take: 4,
+        orderBy: { rating: 'desc' }
+      })
+    ]);
+    
+    // Inventory alerts
+    const lowStockCount = products.filter(p => p.stock <= (p.threshold ?? 5)).length;
 
     // 2. Dynamic Financial Metric Calculations (Installations, AMCs, Appointments, Expenses)
-    // Query paid/partial items inside selected date range
-    const installations = await prisma.installation.findMany({
-      where: { createdAt: { gte: startDate, lte: endDate } }
-    });
-
-    const amcs = await prisma.amc.findMany({
-      where: { createdAt: { gte: startDate, lte: endDate } }
-    });
-
-    const appointments = await prisma.appointment.findMany({
-      where: { 
-        status: 'Completed',
-        completedAt: { gte: startDate, lte: endDate } 
-      }
-    });
-
-    const expenses = await prisma.expense.findMany({
-      where: { date: { gte: startDate, lte: endDate } }
-    });
-
     // Inflow Revenue: Installations cash + AMC cash + Paid Appointment charges
     const installRevenue = installations.reduce((sum, item) => sum + (item.amountPaid || 0), 0);
     const amcRevenue = amcs.reduce((sum, item) => sum + (item.amountPaid || 0), 0);
@@ -227,23 +273,6 @@ export async function GET(request: Request) {
       };
     });
 
-    // 4. Appointments Donut Chart Data
-    const completedCount = await prisma.appointment.count({
-      where: { status: 'Completed', createdAt: { gte: startDate, lte: endDate } }
-    });
-    const pendingCount = await prisma.appointment.count({
-      where: { status: 'Pending', createdAt: { gte: startDate, lte: endDate } }
-    });
-    const scheduledCount = await prisma.appointment.count({
-      where: { status: 'Scheduled', createdAt: { gte: startDate, lte: endDate } }
-    });
-    const inProgressCount = await prisma.appointment.count({
-      where: { status: 'In Progress', createdAt: { gte: startDate, lte: endDate } }
-    });
-    const cancelledCount = await prisma.appointment.count({
-      where: { status: 'Cancelled', createdAt: { gte: startDate, lte: endDate } }
-    });
-
     const servicesChartData = [
       { name: 'Completed', value: completedCount, color: '#10B981' },
       { name: 'Pending / Scheduled', value: pendingCount + scheduledCount, color: '#3B82F6' },
@@ -251,28 +280,7 @@ export async function GET(request: Request) {
       { name: 'Cancelled', value: cancelledCount, color: '#EF4444' },
     ];
 
-    // 5. Recent lists
-    const recentAppointments = await prisma.appointment.findMany({
-      take: 5,
-      orderBy: { date: 'desc' },
-      include: { customer: true }
-    });
-
-    const recentInstallations = await prisma.installation.findMany({
-      take: 5,
-      orderBy: { date: 'desc' }
-    });
-
-    const expiringAmcs = await prisma.amc.findMany({
-      take: 5,
-      where: { status: { in: ['Expiring Soon', 'Expired'] } },
-      orderBy: { endDate: 'asc' }
-    });
-
-    const topTechnicians = await prisma.technician.findMany({
-      take: 4,
-      orderBy: { rating: 'desc' }
-    });
+    // Recent lists are pre-fetched in the parallel block at the top
 
     return NextResponse.json({
       stats: {

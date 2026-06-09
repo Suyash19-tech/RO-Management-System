@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/with-rate-limit';
+import { eventEmitter } from '@/lib/events';
 
 export async function GET() {
   try {
@@ -40,6 +41,7 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
         status: data.status || 'Scheduled',
       },
     });
+    eventEmitter.emit('appointment_update', { id: appointment.id, action: 'create', appointment });
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
     console.error('Failed to create appointment:', error);

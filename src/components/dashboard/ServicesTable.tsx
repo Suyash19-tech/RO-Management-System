@@ -69,13 +69,26 @@ export function ServicesTable() {
 
   // SWR for appointments and technicians
   const { data: appointmentsData, mutate: mutateAppointments } = useSWR<Appointment[]>('/api/appointments', fetcher, {
-    refreshInterval: 5000,
     revalidateOnFocus: true,
   });
   const { data: techniciansData } = useSWR<{ id: string; name: string; status: string }[]>('/api/technicians', fetcher, {
-    refreshInterval: 5000,
     revalidateOnFocus: true,
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const eventSource = new EventSource('/api/events');
+    eventSource.onmessage = () => {
+      mutateAppointments();
+    };
+    eventSource.onerror = (err) => {
+      console.error('SSE Connection Error:', err);
+      eventSource.close();
+    };
+    return () => {
+      eventSource.close();
+    };
+  }, [mutateAppointments]);
 
   const loading = !appointmentsData && !techniciansData;
   const appointments = Array.isArray(appointmentsData)
@@ -114,8 +127,18 @@ export function ServicesTable() {
     setNotifying(true);
 
     try {
-      // 1. Update Appointment in DB — mark as Scheduled so it moves to Appointments tab
-      await fetch(`/api/appointments/${selectedApt.id}`, {
+      // 1. Optimistic Update
+      const updatedAppointments = appointmentsData
+        ? appointmentsData.map((a: Appointment) =>
+            a.id === selectedApt.id
+              ? { ...a, tech: assignTech, date: `${assignDate}T${assignTime}:00.000Z`, status: 'Scheduled' }
+              : a
+          )
+        : [];
+      mutateAppointments(updatedAppointments, false);
+
+      // 2. Update Appointment in DB — mark as Scheduled so it moves to Appointments tab
+      const res = await fetch(`/api/appointments/${selectedApt.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -127,7 +150,9 @@ export function ServicesTable() {
         })
       });
 
-      // 2. Show success, then close modal & refresh (confirmed apt disappears from this tab)
+      if (!res.ok) throw new Error("API call failed");
+
+      // 3. Show success, then close modal & refresh (confirmed apt disappears from this tab)
       setTimeout(() => {
         setNotifying(false);
         setNotified(true);
@@ -143,6 +168,7 @@ export function ServicesTable() {
       console.error("Failed to update appointment", error);
       setNotifying(false);
       toast.error("Failed to confirm appointment.");
+      mutateAppointments(); // Rollback to server state
     }
   };
 
@@ -153,7 +179,18 @@ export function ServicesTable() {
     const remarkToSend = adminRemark ? adminRemark : "We are currently unavailable at your requested slot. Please pick a new date and time.";
 
     try {
-      await fetch(`/api/appointments/${selectedApt.id}`, {
+      // 1. Optimistic Update
+      const updatedAppointments = appointmentsData
+        ? appointmentsData.map((a: Appointment) =>
+            a.id === selectedApt.id
+              ? { ...a, status: 'Reschedule Requested' }
+              : a
+          )
+        : [];
+      mutateAppointments(updatedAppointments, false);
+
+      // 2. API Call
+      const res = await fetch(`/api/appointments/${selectedApt.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -161,6 +198,8 @@ export function ServicesTable() {
           remarks: `Admin: ${remarkToSend} | Customer: ${selectedApt.remarks || ''}`
         })
       });
+
+      if (!res.ok) throw new Error("API call failed");
 
       setTimeout(() => {
         setNotifying(false);
@@ -175,6 +214,7 @@ export function ServicesTable() {
       console.error("Failed to request reschedule", error);
       setNotifying(false);
       toast.error("Failed to request reschedule.");
+      mutateAppointments(); // Rollback to server state
     }
   };
 
