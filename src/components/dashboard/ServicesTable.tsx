@@ -1,5 +1,7 @@
 "use client";
 import toast from "react-hot-toast";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 import { MapPin, Calendar, Clock, User, Wrench, ChevronRight, FileText, CheckCircle2, AlertCircle, X, Check } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -52,9 +54,6 @@ const TIME_SLOTS = [
 
 export function ServicesTable() {
   const router = useRouter();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [technicians, setTechnicians] = useState<{ id: string; name: string; status: string }[]>([]);
   
   const [selectedApt, setSelectedApt] = useState<Appointment | null>(null);
   const [customerDetails, setCustomerDetails] = useState<any>(null);
@@ -68,45 +67,21 @@ export function ServicesTable() {
   const [notifying, setNotifying] = useState(false);
   const [notified, setNotified] = useState(false);
 
-  // Fetch only PENDING appointments (unconfirmed service requests)
-  const fetchAppointments = async () => {
-    try {
-      const res = await fetch('/api/appointments');
-      const data = await res.json();
-      // Filter client-side too as safety net
-      const pending = Array.isArray(data) ? data.filter((a: Appointment) => a.status === 'Pending' || a.status === 'Reschedule Requested') : [];
-      setAppointments(pending);
-      setLoading(false);
-    } catch (err) {
-      console.error(err);
-      setLoading(false);
-    }
-  };
+  // SWR for appointments and technicians
+  const { data: appointmentsData, mutate: mutateAppointments } = useSWR<Appointment[]>('/api/appointments', fetcher, {
+    refreshInterval: 5000,
+    revalidateOnFocus: true,
+  });
+  const { data: techniciansData } = useSWR<{ id: string; name: string; status: string }[]>('/api/technicians', fetcher, {
+    refreshInterval: 5000,
+    revalidateOnFocus: true,
+  });
 
-  const fetchTechnicians = async () => {
-    try {
-      const res = await fetch('/api/technicians');
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setTechnicians(data);
-      }
-    } catch (err) {
-      console.error("Failed to load technicians for assignment list:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchAppointments();
-    fetchTechnicians();
-    
-    // Poll for updates every 5 seconds
-    const interval = setInterval(() => {
-      fetchAppointments();
-      fetchTechnicians();
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
+  const loading = !appointmentsData && !techniciansData;
+  const appointments = Array.isArray(appointmentsData)
+    ? appointmentsData.filter((a: Appointment) => a.status === 'Pending' || a.status === 'Reschedule Requested')
+    : [];
+  const technicians = Array.isArray(techniciansData) ? techniciansData : [];
 
   // Fetch Customer Details when Modal Opens
   useEffect(() => {
@@ -156,7 +131,7 @@ export function ServicesTable() {
       setTimeout(() => {
         setNotifying(false);
         setNotified(true);
-        fetchAppointments();
+        mutateAppointments();
         // Auto-close modal after 2s so user can see the card has moved
         setTimeout(() => {
           setSelectedApt(null);
@@ -190,7 +165,7 @@ export function ServicesTable() {
       setTimeout(() => {
         setNotifying(false);
         setNotified(true);
-        fetchAppointments();
+        mutateAppointments();
         setTimeout(() => {
           setSelectedApt(null);
           setNotified(false);

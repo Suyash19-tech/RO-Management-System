@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Bell, Search, Menu, AlertTriangle, AlertCircle, Info, ChevronRight, LogOut, Check } from "lucide-react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 interface Notification {
   id: string;
@@ -39,10 +41,15 @@ const playCutePop = () => {
 };
 
 export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dismissedTrigger, setDismissedTrigger] = useState(0);
+
+  const { data: rawNotifications, mutate: mutateNotifications } = useSWR<Notification[]>("/api/notifications", fetcher, {
+    refreshInterval: 30000,
+    revalidateOnFocus: true,
+  });
 
   const getDismissedIds = (): string[] => {
     if (typeof window === "undefined") return [];
@@ -54,62 +61,51 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
     }
   };
 
-  const fetchNotifications = async () => {
-    try {
-      const res = await fetch("/api/notifications");
-      if (!res.ok) throw new Error("Failed to load notifications");
-      const data = await res.json();
-      
-      const dismissed = getDismissedIds();
-      const visible = data.filter((n: any) => !dismissed.includes(n.id));
-      
-      if (typeof window !== "undefined") {
-        const knownIds = JSON.parse(localStorage.getItem("admin_known_notifs") || "[]");
-        let hasNew = false;
-        const updatedKnownIds = [...knownIds];
-        
-        visible.forEach((n: any) => {
-          if (!knownIds.includes(n.id)) {
-            hasNew = true;
-            updatedKnownIds.push(n.id);
-          }
-        });
-
-        if (hasNew) {
-          localStorage.setItem("admin_known_notifs", JSON.stringify(updatedKnownIds));
-          playCutePop();
-        }
-      }
-      
-      setNotifications(visible);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const dismissed = getDismissedIds();
+  const notifications = Array.isArray(rawNotifications)
+    ? rawNotifications.filter((n: any) => !dismissed.includes(n.id))
+    : [];
 
   useEffect(() => {
-    fetchNotifications();
-    // Poll every 30 seconds to keep alerts live
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (!rawNotifications || typeof window === "undefined") return;
+    const dismissed = getDismissedIds();
+    const visible = rawNotifications.filter((n: any) => !dismissed.includes(n.id));
+    const knownIds = JSON.parse(localStorage.getItem("admin_known_notifs") || "[]");
+    let hasNew = false;
+    const updatedKnownIds = [...knownIds];
+    
+    visible.forEach((n: any) => {
+      if (!knownIds.includes(n.id)) {
+        hasNew = true;
+        updatedKnownIds.push(n.id);
+      }
+    });
+
+    if (hasNew) {
+      localStorage.setItem("admin_known_notifs", JSON.stringify(updatedKnownIds));
+      playCutePop();
+    }
+  }, [rawNotifications]);
 
   // Sync state whenever storage event fires, custom event fires, or dropdown opens
   useEffect(() => {
     if (isOpen) {
-      fetchNotifications();
+      mutateNotifications();
     }
-  }, [isOpen]);
+  }, [isOpen, mutateNotifications]);
 
   useEffect(() => {
-    const handleSync = () => fetchNotifications();
+    const handleSync = () => {
+      setDismissedTrigger(prev => prev + 1);
+      mutateNotifications();
+    };
     window.addEventListener("storage", handleSync);
     window.addEventListener("notifications_updated", handleSync);
     return () => {
       window.removeEventListener("storage", handleSync);
       window.removeEventListener("notifications_updated", handleSync);
     };
-  }, []);
+  }, [mutateNotifications]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -130,7 +126,6 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
     const dismissed = getDismissedIds();
     const updated = [...dismissed, id];
     localStorage.setItem("dismissed_notifications", JSON.stringify(updated));
-    setNotifications(prev => prev.filter(n => n.id !== id));
     window.dispatchEvent(new Event("notifications_updated"));
   };
 
@@ -139,7 +134,6 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
     const allIds = notifications.map(n => n.id);
     const updated = [...new Set([...dismissed, ...allIds])];
     localStorage.setItem("dismissed_notifications", JSON.stringify(updated));
-    setNotifications([]);
     window.dispatchEvent(new Event("notifications_updated"));
   };
 

@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 /* --------------- Types --------------- */
 type LineItem = { name: string; qty: number; cost: number };
@@ -584,32 +586,24 @@ function CompletionWizard({
    MAIN EXPORT
 ═══════════════════════════════════════════════════ */
 export function AppointmentsTable() {
-  const [all, setAll] = useState<Appointment[]>([]);
-  const [technicians, setTechnicians] = useState<{ id: string; name: string; status: string }[]>([]);
-  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"active" | "completed">("active");
   const [payFilter, setPayFilter] = useState<"all" | "Paid" | "Unpaid" | "Free">("all");
   const [search, setSearch] = useState("");
   const [completionApt, setCompletionApt] = useState<Appointment | null>(null);
   const [invoiceApt, setInvoiceApt] = useState<Appointment | null>(null);
 
-  const fetchAll = async () => {
-    try {
-      const [appRes, techRes] = await Promise.all([
-        fetch("/api/appointments"),
-        fetch("/api/technicians")
-      ]);
-      const appData = await appRes.json();
-      const techData = await techRes.json();
-      setAll(Array.isArray(appData) ? appData : []);
-      setTechnicians(Array.isArray(techData) ? techData.filter((t: any) => t.status === "On Duty") : []);
-    } catch { /**/ } finally { setLoading(false); }
-  };
-  useEffect(() => { 
-    fetchAll(); 
-    const interval = setInterval(fetchAll, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  const { data: appData, mutate: mutateAppointments } = useSWR<Appointment[]>("/api/appointments", fetcher, {
+    refreshInterval: 5000,
+    revalidateOnFocus: true,
+  });
+  const { data: techData } = useSWR<any[]>("/api/technicians", fetcher, {
+    refreshInterval: 5000,
+    revalidateOnFocus: true,
+  });
+
+  const loading = !appData && !techData;
+  const all = Array.isArray(appData) ? appData : [];
+  const technicians = Array.isArray(techData) ? techData.filter((t: any) => t.status === "On Duty") : [];
 
   const active = all.filter((a) => ["Scheduled", "In Progress"].includes(a.status));
   const completed = all.filter((a) => a.status === "Completed");
@@ -623,7 +617,7 @@ export function AppointmentsTable() {
     !search || a.customerName.toLowerCase().includes(search.toLowerCase()) || a.tech.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleDone = () => { fetchAll(); setTab("completed"); };
+  const handleDone = () => { mutateAppointments(); setTab("completed"); };
 
   const handleAssignTech = async (id: string, techName: string) => {
     try {
@@ -632,7 +626,7 @@ export function AppointmentsTable() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tech: techName })
       });
-      fetchAll();
+      mutateAppointments();
     } catch (err) {
       console.error(err);
       toast.error("Failed to assign technician");

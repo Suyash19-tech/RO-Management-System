@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { 
   Home, 
   Users, 
@@ -75,7 +77,27 @@ const sidebarGroups: SidebarGroup[] = [
 
 export function Sidebar({ isOpen, toggleSidebar }: { isOpen: boolean, toggleSidebar?: () => void }) {
   const pathname = usePathname();
-  const [notificationCount, setNotificationCount] = useState(0);
+  const [dismissedTrigger, setDismissedTrigger] = useState(0);
+
+  const { data: rawNotifications, mutate: mutateNotifications } = useSWR<any[]>("/api/notifications", fetcher, {
+    refreshInterval: 30000,
+    revalidateOnFocus: true,
+  });
+
+  const getDismissedIds = (): string[] => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = localStorage.getItem("dismissed_notifications");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const dismissed = getDismissedIds();
+  const notificationCount = Array.isArray(rawNotifications)
+    ? rawNotifications.filter((n: any) => !dismissed.includes(n.id)).length
+    : 0;
 
   // Expanded state for collapsible groups
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
@@ -105,39 +127,11 @@ export function Sidebar({ isOpen, toggleSidebar }: { isOpen: boolean, toggleSide
     }));
   };
 
-  const fetchNotificationCount = async () => {
-    try {
-      const res = await fetch("/api/notifications");
-      if (!res.ok) throw new Error("Failed to load notifications count");
-      const data = await res.json();
-      
-      if (typeof window !== "undefined") {
-        try {
-          const stored = localStorage.getItem("dismissed_notifications");
-          if (stored) {
-            const dismissedIds = JSON.parse(stored) as string[];
-            const visible = data.filter((n: any) => !dismissedIds.includes(n.id));
-            setNotificationCount(visible.length);
-            return;
-          }
-        } catch {}
-      }
-      setNotificationCount(data.length);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  useEffect(() => {
-    fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
   // Sync count on local storage triggers and custom event
   useEffect(() => {
     const handleStorageChange = () => {
-      fetchNotificationCount();
+      setDismissedTrigger(prev => prev + 1);
+      mutateNotifications();
     };
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("notifications_updated", handleStorageChange);
@@ -145,7 +139,7 @@ export function Sidebar({ isOpen, toggleSidebar }: { isOpen: boolean, toggleSide
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("notifications_updated", handleStorageChange);
     };
-  }, []);
+  }, [mutateNotifications]);
 
   return (
     <>
