@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withRateLimit } from '@/lib/with-rate-limit';
 
 export async function GET() {
   try {
@@ -23,7 +24,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+async function postHandler(request: NextRequest): Promise<NextResponse> {
   try {
     const data = await request.json();
     const appointment = await prisma.appointment.create({
@@ -45,3 +46,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create appointment' }, { status: 500 });
   }
 }
+
+// Strict: 5 bookings per minute per IP
+export const POST = withRateLimit(postHandler, { limit: 5, windowMs: 60_000 });

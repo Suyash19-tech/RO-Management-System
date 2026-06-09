@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withRateLimit } from '@/lib/with-rate-limit';
 
-export async function GET() {
+async function getHandler(_req: NextRequest): Promise<NextResponse> {
   try {
     const customers = await prisma.customer.findMany({
       orderBy: { createdAt: 'desc' },
@@ -31,3 +32,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create customer' }, { status: 500 });
   }
 }
+
+// Moderate: 60 requests per minute per IP
+export const GET = withRateLimit(getHandler, { limit: 60, windowMs: 60_000 });

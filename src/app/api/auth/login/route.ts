@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { signJwtToken } from "@/lib/auth";
+import { withRateLimit } from "@/lib/with-rate-limit";
 
-export async function POST(req: Request) {
+async function loginHandler(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json();
     const { username, password } = body;
@@ -42,3 +43,6 @@ export async function POST(req: Request) {
     );
   }
 }
+
+// Very strict: 5 attempts per 15 minutes per IP
+export const POST = withRateLimit(loginHandler, { limit: 5, windowMs: 15 * 60 * 1000 });

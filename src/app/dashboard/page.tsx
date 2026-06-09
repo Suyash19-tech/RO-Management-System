@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import Link from "next/link";
 import { 
   Users, ClipboardList, Calendar, IndianRupee, TrendingUp, AlertTriangle, 
@@ -52,8 +54,6 @@ function MiniCard({ icon: Icon, title, value, color, link }: {
 }
 
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState("this_month");
   
   // Custom Date Filters
@@ -64,39 +64,19 @@ export default function DashboardPage() {
   });
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split("T")[0]);
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      let url = `/api/dashboard/stats?filter=${timeFilter}`;
-      if (timeFilter === "custom" && startDate && endDate) {
-        url += `&start=${startDate}&end=${endDate}`;
-      }
-      
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to load analytics");
-      const resData = await res.json();
-      setData(resData);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  // Build SWR key — null when custom range isn't fully filled
+  const swrKey = (() => {
+    if (timeFilter === "custom") {
+      if (!startDate || !endDate) return null;
+      return `/api/dashboard/stats?filter=custom&start=${startDate}&end=${endDate}`;
     }
-  };
+    return `/api/dashboard/stats?filter=${timeFilter}`;
+  })();
 
-  useEffect(() => {
-    if (timeFilter !== "custom" || (startDate && endDate)) {
-      fetchDashboardData();
-    }
-    
-    // Poll for updates every 10 seconds (less frequent for heavy dashboard stats)
-    const interval = setInterval(() => {
-      if (timeFilter !== "custom" || (startDate && endDate)) {
-        fetchDashboardData();
-      }
-    }, 10000);
-    
-    return () => clearInterval(interval);
-  }, [timeFilter, startDate, endDate]);
+  const { data, isLoading: loading } = useSWR<DashboardData>(swrKey, fetcher, {
+    refreshInterval: 10000,
+    revalidateOnFocus: true,
+  });
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "—";
