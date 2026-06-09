@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { redis } from '@/lib/redis';
+import { getMemoryCache, setMemoryCache } from '@/lib/memory-cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +11,31 @@ export async function GET(request: Request) {
     const filter = searchParams.get('filter') || 'this_month';
     const startStr = searchParams.get('start');
     const endStr = searchParams.get('end');
+
+    const cacheKey = `dashboard:stats:${filter}:${startStr || ''}:${endStr || ''}`;
+
+    // 1. Check L1 Cache (Local Node.js In-Memory) - Latency: < 0.1ms
+    const l1Cached = getMemoryCache(cacheKey);
+    if (l1Cached) {
+      return NextResponse.json(l1Cached);
+    }
+
+    // 2. Check L2 Cache (Distributed Upstash Redis) - Latency: ~300ms (geographical RTT)
+    if (redis) {
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          // Robust parse: Upstash Redis REST client sometimes auto-deserializes JSON strings to objects
+          const parsed = typeof cached === 'string' ? JSON.parse(cached) : cached;
+          
+          // Populate L1 cache for subsequent requests
+          setMemoryCache(cacheKey, parsed, 60);
+          return NextResponse.json(parsed);
+        }
+      } catch (err) {
+        console.error('Redis cache read error:', err);
+      }
+    }
 
     const now = new Date();
     let startDate = new Date();
@@ -40,7 +67,7 @@ export async function GET(request: Request) {
     const todayEnd = new Date(now);
     todayEnd.setHours(23, 59, 59, 999);
 
-    // Run all database query metrics in a single parallel execution
+    // Optimized parallel database queries (down from 18 to 14, using aggregates/groupBy and projection selects)
     const [
       totalCustomers,
       totalProducts,
@@ -50,12 +77,8 @@ export async function GET(request: Request) {
       installations,
       amcs,
       appointments,
-      expenses,
-      completedCount,
-      pendingCount,
-      scheduledCount,
-      inProgressCount,
-      cancelledCount,
+      expensesSum,
+      appointmentStatusCounts,
       recentAppointments,
       recentInstallations,
       expiringAmcs,
@@ -64,7 +87,10 @@ export async function GET(request: Request) {
       prisma.customer.count(),
       prisma.product.count(),
       prisma.amc.count({ where: { status: 'Active' } }),
-      prisma.product.findMany({ where: { category: { not: "AMC Plan" } } }),
+      prisma.product.findMany({
+        where: { category: { not: 'AMC Plan' } },
+        select: { stock: true, threshold: true }
+      }),
       prisma.appointment.count({
         where: {
           date: { gte: todayStart, lte: todayEnd },
@@ -72,34 +98,28 @@ export async function GET(request: Request) {
         }
       }),
       prisma.installation.findMany({
-        where: { createdAt: { gte: startDate, lte: endDate } }
+        where: { createdAt: { gte: startDate, lte: endDate } },
+        select: { createdAt: true, amountPaid: true, amountDue: true }
       }),
       prisma.amc.findMany({
-        where: { createdAt: { gte: startDate, lte: endDate } }
+        where: { createdAt: { gte: startDate, lte: endDate } },
+        select: { createdAt: true, amountPaid: true, balanceDue: true }
       }),
       prisma.appointment.findMany({
         where: { 
           status: 'Completed',
           completedAt: { gte: startDate, lte: endDate } 
-        }
+        },
+        select: { completedAt: true, costCharged: true }
       }),
-      prisma.expense.findMany({
-        where: { date: { gte: startDate, lte: endDate } }
+      prisma.expense.aggregate({
+        where: { date: { gte: startDate, lte: endDate } },
+        _sum: { amountPaid: true, balanceDue: true }
       }),
-      prisma.appointment.count({
-        where: { status: 'Completed', createdAt: { gte: startDate, lte: endDate } }
-      }),
-      prisma.appointment.count({
-        where: { status: 'Pending', createdAt: { gte: startDate, lte: endDate } }
-      }),
-      prisma.appointment.count({
-        where: { status: 'Scheduled', createdAt: { gte: startDate, lte: endDate } }
-      }),
-      prisma.appointment.count({
-        where: { status: 'In Progress', createdAt: { gte: startDate, lte: endDate } }
-      }),
-      prisma.appointment.count({
-        where: { status: 'Cancelled', createdAt: { gte: startDate, lte: endDate } }
+      prisma.appointment.groupBy({
+        by: ['status'],
+        where: { createdAt: { gte: startDate, lte: endDate } },
+        _count: { status: true }
       }),
       prisma.appointment.findMany({
         take: 5,
@@ -120,30 +140,39 @@ export async function GET(request: Request) {
         orderBy: { rating: 'desc' }
       })
     ]);
-    
+
     // Inventory alerts
     const lowStockCount = products.filter(p => p.stock <= (p.threshold ?? 5)).length;
 
-    // 2. Dynamic Financial Metric Calculations (Installations, AMCs, Appointments, Expenses)
-    // Inflow Revenue: Installations cash + AMC cash + Paid Appointment charges
+    // Dynamic Financial Metric Calculations
     const installRevenue = installations.reduce((sum, item) => sum + (item.amountPaid || 0), 0);
     const amcRevenue = amcs.reduce((sum, item) => sum + (item.amountPaid || 0), 0);
     const apptRevenue = appointments.reduce((sum, item) => sum + (item.costCharged || 0), 0);
     const totalRevenue = installRevenue + amcRevenue + apptRevenue;
 
-    // Outflow Expenses: Actual cash paid to vendors/suppliers/marketing
-    const totalExpenses = expenses.reduce((sum, item) => sum + (item.amountPaid || 0), 0);
+    const totalExpenses = expensesSum._sum.amountPaid || 0;
+    const supplierDues = expensesSum._sum.balanceDue || 0;
 
-    // Outstanding Supplier Dues (Expenses balanceDue)
-    const supplierDues = expenses.reduce((sum, item) => sum + (item.balanceDue || 0), 0);
-
-    // Outstanding Customer Dues (Installations amountDue + AMCs balanceDue)
     const installDues = installations.reduce((sum, item) => sum + (item.amountDue || 0), 0);
     const amcDues = amcs.reduce((sum, item) => sum + (item.balanceDue || 0), 0);
     const customerDues = installDues + amcDues;
 
-    // Net Profit
     const netProfit = totalRevenue - totalExpenses;
+
+    // Process appointment status counts from groupBy
+    let completedCount = 0;
+    let pendingCount = 0;
+    let scheduledCount = 0;
+    let inProgressCount = 0;
+    let cancelledCount = 0;
+
+    appointmentStatusCounts.forEach(item => {
+      if (item.status === 'Completed') completedCount = item._count.status;
+      else if (item.status === 'Pending') pendingCount = item._count.status;
+      else if (item.status === 'Scheduled') scheduledCount = item._count.status;
+      else if (item.status === 'In Progress') inProgressCount = item._count.status;
+      else if (item.status === 'Cancelled') cancelledCount = item._count.status;
+    });
 
     // 3. Dynamic Chart Map Construction
     const chartDataMap: Record<string, number> = {};
@@ -280,9 +309,7 @@ export async function GET(request: Request) {
       { name: 'Cancelled', value: cancelledCount, color: '#EF4444' },
     ];
 
-    // Recent lists are pre-fetched in the parallel block at the top
-
-    return NextResponse.json({
+    const result = {
       stats: {
         totalCustomers,
         totalProducts,
@@ -304,7 +331,21 @@ export async function GET(request: Request) {
         salesChartData,
         servicesChartData
       }
-    });
+    };
+
+    // Save to L1 Memory Cache (60 seconds)
+    setMemoryCache(cacheKey, result, 60);
+
+    // Save to L2 Redis Cache (60 seconds)
+    if (redis) {
+      try {
+        await redis.setex(cacheKey, 60, result);
+      } catch (err) {
+        console.error('Redis cache write error:', err);
+      }
+    }
+
+    return NextResponse.json(result);
 
   } catch (error) {
     console.error('Failed to load dashboard stats:', error);

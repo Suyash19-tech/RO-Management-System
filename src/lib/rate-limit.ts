@@ -1,18 +1,9 @@
-import { Redis } from '@upstash/redis';
+import { redis } from './redis';
 
 export interface RateLimitConfig {
   limit: number;      // max requests
   windowMs: number;   // time window in ms
 }
-
-// Check if Upstash Redis credentials are set in the environment
-const redis =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-    ? new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
-      })
-    : null;
 
 if (redis) {
   console.log('Redis Rate Limiting active.');
