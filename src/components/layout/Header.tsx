@@ -271,9 +271,10 @@ export function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
 
         {/* Dynamic Premium Logout Button on Left of Admin Info */}
         <button
-          onClick={() => {
+          onClick={async () => {
             if (confirm("Are you sure you want to logout?")) {
-              window.location.href = "/";
+              await fetch("/api/auth/logout", { method: "POST" });
+              window.location.href = "/login";
             }
           }}
           className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-250 hover:border-rose-200 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-xl text-xs font-extrabold transition-all active:scale-95 cursor-pointer shadow-sm"
