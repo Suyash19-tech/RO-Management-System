@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
-const ADMIN_URL = process.env.ADMIN_API_URL || "http://localhost:3000";
+const ADMIN_URL = process.env.ADMIN_API_URL || 
+  (process.env.NODE_ENV === "production" 
+    ? "https://ro-management-system-9rz3.vercel.app" 
+    : "http://localhost:3000");
 
 const nextConfig: NextConfig = {
   async rewrites() {
