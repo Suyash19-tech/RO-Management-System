@@ -77,6 +77,5 @@ export default function SplashScreen() {
           </motion.div>
         </motion.div>
       </div>
-    </>
   );
 }
