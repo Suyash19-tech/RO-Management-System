@@ -10,13 +10,9 @@ import { NotificationCard, EmptyNotifications } from "@/components/notifications
 export default function NotificationsScreen() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchNotifications().then(data => {
-      setNotifications(data);
-      setLoading(false);
-    });
+    fetchNotifications().then(data => { setNotifications(data); });
   }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -62,13 +58,7 @@ export default function NotificationsScreen() {
       </div>
 
       <div className="px-4 py-4">
-        {loading ? (
-          <div className="space-y-4">
-            <div className="h-32 bg-slate-100 animate-pulse rounded-2xl" />
-            <div className="h-32 bg-slate-100 animate-pulse rounded-2xl" />
-            <div className="h-32 bg-slate-100 animate-pulse rounded-2xl" />
-          </div>
-        ) : notifications.length === 0 ? (
+        {notifications.length === 0 ? (
           <EmptyNotifications />
         ) : (
           <div className="space-y-3">

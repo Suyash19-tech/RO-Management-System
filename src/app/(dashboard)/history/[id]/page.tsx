@@ -19,7 +19,6 @@ export default function TicketDetailScreen() {
   const router = useRouter();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [showInvoice, setShowInvoice] = useState(false);
 
   // Reschedule state
@@ -32,28 +31,13 @@ export default function TicketDetailScreen() {
     fetchProfile().then(p => setProfile(p));
     
     let mounted = true;
-    const load = () => {
-      if (params.id) {
-        fetchTicketById(params.id as string).then((res) => {
-          if (mounted) {
-            setTicket(res);
-            setLoading(false);
-          }
-        });
-      }
-    };
-    
-    load();
-    const interval = setInterval(load, 3000);
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
+    if (params.id) {
+      fetchTicketById(params.id as string).then((res) => {
+        if (mounted) setTicket(res);
+      });
+    }
+    return () => { mounted = false; };
   }, [params.id]);
-
-  if (loading) {
-    return <div className="p-6">Loading details...</div>;
-  }
 
   if (!ticket) {
     return <div className="p-6">Ticket not found.</div>;

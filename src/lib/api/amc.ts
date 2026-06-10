@@ -27,7 +27,6 @@ export interface AMCSubscription {
 }
 
 export const fetchAMCPlans = async (): Promise<AMCPlan[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
   return [
     {
       id: "silver",

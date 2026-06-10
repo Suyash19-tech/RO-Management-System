@@ -15,13 +15,11 @@ export default function AMCScreen() {
   const router = useRouter();
   const [sub, setSub] = useState<AMCSubscription | null>(null);
   const [plans, setPlans] = useState<AMCPlan[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([fetchMyAMC(), fetchAMCPlans()]).then(([subData, planData]) => {
       setSub(subData);
       setPlans(planData);
-      setLoading(false);
     });
   }, []);
 
@@ -47,9 +45,7 @@ export default function AMCScreen() {
         <h1 className="text-xl font-bold text-slate-900">AMC Protection</h1>
       </div>
 
-      {loading ? (
-        <div className="p-6">Loading AMC details...</div>
-      ) : (
+      {(
         <motion.div variants={container} initial="hidden" animate="show" className="px-6 mt-4 space-y-6">
           {!sub ? (
             <motion.div variants={item}>

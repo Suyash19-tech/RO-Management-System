@@ -43,19 +43,15 @@ export const fetchTickets = async (): Promise<Ticket[]> => {
   
   if (!parsed || !parsed.phone) return [];
 
-  // Sync with backend to get latest admin changes (status, assigned tech, remarks)
-  try {
-    const res = await fetch(`/admin-api/customers/${encodeURIComponent(parsed.phone)}`, {
-      cache: 'no-store'
-    });
-    if (res.ok) {
-      const freshProfile = await res.json();
-      localStorage.setItem("customer_profile", JSON.stringify(freshProfile));
-      parsed = freshProfile;
-    }
-  } catch(e) {
-    // Backend unavailable – use cached profile, no error logging
-  }
+  // Background sync — don't block rendering
+  fetch(`/admin-api/customers/${encodeURIComponent(parsed.phone)}`, { cache: 'no-store' })
+    .then(async (res) => {
+      if (res.ok) {
+        const freshProfile = await res.json();
+        localStorage.setItem("customer_profile", JSON.stringify(freshProfile));
+      }
+    })
+    .catch(() => {});
   
   if (!parsed.appointments || !Array.isArray(parsed.appointments) || parsed.appointments.length === 0) return [];
 

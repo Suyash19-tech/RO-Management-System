@@ -6,32 +6,17 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { fetchTickets, Ticket } from "@/lib/api/history";
 import { TicketCard } from "@/components/history/TicketCard";
-import { WaterDropLoader } from "@/components/ui/WaterDropLoader";
 import { EmptyState } from "@/components/history/EmptyState";
 
 export default function ServiceHistoryScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"ACTIVE" | "COMPLETED">("ACTIVE");
   const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    const load = () => {
-      fetchTickets().then((data) => {
-        if (mounted) {
-          setTickets(data);
-          setLoading(false);
-        }
-      });
-    };
-    
-    load();
-    const interval = setInterval(load, 3000);
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
+    fetchTickets().then((data) => { if (mounted) setTickets(data); });
+    return () => { mounted = false; };
   }, []);
 
   const activeTickets = tickets.filter(t => t.status !== "COMPLETED");
@@ -76,10 +61,7 @@ export default function ServiceHistoryScreen() {
 
       {/* List Area */}
       <div className="flex-1 overflow-y-auto px-6 py-6 pb-20">
-        {loading ? (
-          <WaterDropLoader />
-        ) : (
-          <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="popLayout">
             {displayTickets.length === 0 ? (
               <motion.div
                 key="empty"
@@ -113,7 +95,6 @@ export default function ServiceHistoryScreen() {
               </motion.div>
             )}
           </AnimatePresence>
-        )}
       </div>
     </div>
   );

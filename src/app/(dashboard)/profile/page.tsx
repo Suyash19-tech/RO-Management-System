@@ -1,25 +1,46 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, User, MapPin, Smartphone, Mail, Bell, Moon, Shield, Info, LogOut, FileText } from "lucide-react";
+import { ArrowLeft, User, MapPin, Smartphone, Mail, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { fetchProfile, UserProfile } from "@/lib/api/profile";
 import { cn } from "@/lib/utils";
 
-import { ProfileHeader, SectionCard, ActionRow, ToggleRow } from "@/components/profile/ProfileComponents";
-import { WaterDropLoader } from "@/components/ui/WaterDropLoader";
+import { ProfileHeader, SectionCard, ActionRow } from "@/components/profile/ProfileComponents";
+
+// Read synchronously from localStorage so there's zero loading flash
+function getProfileFromCache(): UserProfile | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("customer_profile");
+    if (!stored || stored === "null" || stored === "undefined") return null;
+    const parsed = JSON.parse(stored);
+    if (!parsed) return null;
+    return {
+      id: parsed.id,
+      name: parsed.name || "Unknown",
+      phone: parsed.phone,
+      email: parsed.email || "",
+      customerSince: parsed.createdAt,
+      addresses: [{ id: "addr_1", label: "Primary Address", fullAddress: parsed.address || "N/A", isPrimary: true }],
+      roSummary: {
+        totalUnits: parsed.installations?.length || 0,
+        amcStatus: parsed.amcs?.some((a: any) => a.status === 'ACTIVE') ? "ACTIVE" : "NONE",
+        totalServices: parsed.appointments?.filter((a: any) => a.status?.toUpperCase() === 'COMPLETED').length || 0
+      },
+      settings: { pushNotifications: true, smsNotifications: true, whatsappNotifications: true, darkMode: false }
+    };
+  } catch { return null; }
+}
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(() => getProfileFromCache());
 
+  // Background refresh — silently updates data without showing any spinner
   useEffect(() => {
-    fetchProfile().then(data => {
-      setProfile(data);
-      setLoading(false);
-    });
+    fetchProfile().then(data => { if (data) setProfile(data); });
   }, []);
 
   const container = {
@@ -31,10 +52,6 @@ export default function ProfileScreen() {
     hidden: { opacity: 0, y: 15 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
   } as const;
-
-  if (loading) {
-    return <WaterDropLoader />;
-  }
 
   if (!profile) {
     return (

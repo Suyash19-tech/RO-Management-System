@@ -10,7 +10,6 @@ import { FileText } from "lucide-react";
 import { ROHeroCard } from "@/components/my-ro/ROHeroCard";
 import { ROCareBreakdown } from "@/components/my-ro/ROCareBreakdown";
 import { ServiceUsageCard } from "@/components/my-ro/ServiceUsageCard";
-import { WaterDropLoader } from "@/components/ui/WaterDropLoader";
 import dynamic from "next/dynamic";
 
 const InstallationInvoiceModal = dynamic(
@@ -18,39 +17,69 @@ const InstallationInvoiceModal = dynamic(
   { ssr: false }
 );
 
-export default function MyROScreen() {
+// Read synchronously from localStorage — zero loading flash
+function getROFromCache(): ROUnitDetails | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("customer_profile");
+    if (!stored || stored === "null" || stored === "undefined") return null;
+    const parsed = JSON.parse(stored);
+    if (!parsed) return null;
+    const installation = parsed.installations?.[0];
+    if (!installation) return null;
 
-  const [data, setData] = useState<ROUnitDetails | null>(null);
+    const amc = parsed.amcs?.find((a: any) => a.status === 'ACTIVE');
+    const completedServices = parsed.appointments?.filter((a: any) =>
+      a.status?.toUpperCase() === 'COMPLETED' &&
+      (a.paymentStatus === 'Free' || a.type?.includes('Free Service'))
+    ).length || 0;
+    const remainingServices = installation.servicesCount !== undefined ? installation.servicesCount : 3;
+    const totalAllocated = remainingServices + completedServices;
+
+    const timeline: ROUnitDetails["timeline"] = [];
+    if (installation) {
+      timeline.push({ id: "ev_1", type: "INSTALLATION", title: "RO Installed", date: installation.date, description: "Initial installation completed." });
+    }
+    parsed.appointments?.filter((a: any) => a.status?.toUpperCase() === 'COMPLETED').forEach((apt: any) => {
+      timeline.push({ id: apt.id, type: "SERVICE", title: apt.type, date: apt.date, description: apt.remarks || "Service completed successfully." });
+    });
+
+    return {
+      id: installation.id,
+      publicId: "RO-" + installation.id.slice(0, 6).toUpperCase(),
+      brand: "Sardarji RO",
+      model: installation.model || "Standard Model",
+      capacity: "Unknown",
+      installationDate: installation.date,
+      warrantyExpiry: new Date(new Date(installation.date).setFullYear(new Date(installation.date).getFullYear() + 1)).toISOString(),
+      warrantyStatus: new Date() > new Date(new Date(installation.date).setFullYear(new Date(installation.date).getFullYear() + 1)) ? "EXPIRED" : "ACTIVE",
+      roScore: 90,
+      breakdown: { serviceStatus: "GOOD", filterStatus: "GOOD", membraneStatus: "GOOD", openComplaints: parsed.appointments?.filter((a: any) => a.status?.toUpperCase() !== 'COMPLETED').length || 0 },
+      serviceUsage: { allocated: totalAllocated, used: completedServices, remaining: remainingServices },
+      amc: { active: !!amc, planName: amc?.plan || "No Active Plan", expiryDate: amc?.endDate, daysRemaining: amc?.endDate ? Math.ceil((new Date(amc.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0 },
+      timeline: timeline.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+      technicianNotes: ["Device is running efficiently."],
+      rawInstallation: installation,
+    };
+  } catch { return null; }
+}
+
+export default function MyROScreen() {
+  const [data, setData] = useState<ROUnitDetails | null>(() => getROFromCache());
   const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [showInvoice, setShowInvoice] = useState(false);
 
+  // Background refresh — no spinner, silently updates
   useEffect(() => {
     let mounted = true;
-    const load = () => {
-      fetchProfile().then(p => { if (mounted) setProfile(p) });
-      fetchMyRODetails().then((res) => {
-        if (mounted) {
-          setData(res);
-          setLoading(false);
-        }
-      });
-    };
-    
-    load();
-    const interval = setInterval(load, 3000);
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
+    fetchProfile().then(p => { if (mounted) setProfile(p); });
+    fetchMyRODetails().then((res) => { if (mounted && res) setData(res); });
+    return () => { mounted = false; };
   }, []);
 
   const container = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
   } as const;
 
   const item = {
@@ -60,9 +89,7 @@ export default function MyROScreen() {
 
   return (
     <div className="flex-1 bg-[#F8FAFC] h-full overflow-y-auto pb-20 relative">
-      {loading ? (
-        <WaterDropLoader />
-      ) : !data ? (
+      {!data ? (
         <div className="flex flex-col items-center justify-center h-full pt-20 px-6 text-center">
           <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
             <span className="text-3xl">💧</span>

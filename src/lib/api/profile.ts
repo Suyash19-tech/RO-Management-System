@@ -31,17 +31,13 @@ export const fetchProfile = async (): Promise<UserProfile | null> => {
   let parsed; try { parsed = JSON.parse(stored); } catch(e) { return null; }
   if (!parsed) return null;
   
-  // Attempt to fetch fresh data
-  try {
-    const res = await fetch(`/admin-api/customers/${parsed.phone}`);
+  // Sync with backend in background without blocking the UI
+  fetch(`/admin-api/customers/${parsed.phone}`).then(async (res) => {
     if (res.ok) {
       const fresh = await res.json();
       localStorage.setItem("customer_profile", JSON.stringify(fresh));
-      Object.assign(parsed, fresh);
     }
-  } catch (e) {
-    console.error("Could not fetch fresh profile", e);
-  }
+  }).catch(() => {});
 
   return {
     id: parsed.id,
