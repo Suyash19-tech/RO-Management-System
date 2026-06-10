@@ -1,39 +1,18 @@
-// Sardarji RO - Service Worker
-const CACHE_NAME = "sardarji-ro-v1";
-const STATIC_ASSETS = [
-  "/",
-  "/home",
-  "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/Sardarji_RO_logo.png",
-];
+// Sardarji RO - Minimal Service Worker (Bypass to Network)
+// This SW exists purely to satisfy PWA installation requirements.
+// Next.js App Router handles its own caching, routing, and prefetching,
+// so intercepting requests here causes lagging and breaks dynamic pages.
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
-  );
   self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
-  // Network first for API calls, cache first for static assets
-  if (event.request.url.includes("/admin-api/") || event.request.url.includes("/api/")) {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
-    );
-  } else {
-    event.respondWith(
-      caches.match(event.request).then((cached) => cached || fetch(event.request))
-    );
-  }
+  // Completely bypass the service worker and let the browser/Next.js handle it normally.
+  // This prevents any lag during client-side routing and fixes API failures.
+  return;
 });
