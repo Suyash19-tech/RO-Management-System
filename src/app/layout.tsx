@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
 import Script from "next/script";
 import { Toaster } from "react-hot-toast";
+import InstallPrompt from "@/components/ui/InstallPrompt";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,6 +19,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Sardarji RO | Customer Portal",
   description: "Manage your RO services seamlessly.",
+  manifest: "/manifest.json",
   icons: {
     icon: "/Sardarji_RO_logo.png",
   },
@@ -42,6 +44,7 @@ export default function RootLayout({
         <div className="min-h-screen bg-slate-50 flex flex-col relative w-full">
           {children}
         </div>
+        <InstallPrompt />
       </body>
     </html>
   );
