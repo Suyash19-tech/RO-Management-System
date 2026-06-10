@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/Buttons";
 import { PhoneInput } from "@/components/ui/Inputs";
-import Script from "next/script";
 
 const Typewriter = ({ texts, delay = 2500 }: { texts: string[], delay?: number }) => {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
@@ -51,48 +50,6 @@ export default function LoginScreen() {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const vantaRef = useRef<HTMLDivElement>(null);
-  const [vantaEffect, setVantaEffect] = useState<any>(0);
-
-  useEffect(() => {
-    let vantaEffectInstance: any = null;
-    const initVanta = () => {
-      try {
-        if (!vantaEffectInstance && vantaRef.current && (window as any).VANTA) {
-          vantaEffectInstance = (window as any).VANTA.WAVES({
-            el: vantaRef.current,
-            mouseControls: false,
-            touchControls: false,
-            gyroControls: false,
-            minHeight: 200.00,
-            minWidth: 200.00,
-            scale: 1.00,
-            scaleMobile: 1.00,
-            color: 0x24a1e6, // Sky blue
-            shininess: 60.00, // Make it look like shiny water
-            waveHeight: 18.00,
-            waveSpeed: 1.20,
-            zoom: 0.8
-          });
-          setVantaEffect(vantaEffectInstance);
-        }
-      } catch (err) {
-        console.error("Vanta failed to load:", err);
-      }
-    };
-
-    const checkVanta = setInterval(() => {
-      if ((window as any).VANTA) {
-        initVanta();
-        clearInterval(checkVanta);
-      }
-    }, 100);
-    
-    return () => {
-      clearInterval(checkVanta);
-      if (vantaEffectInstance) vantaEffectInstance.destroy();
-    };
-  }, []);
 
   const handleLogin = async () => {
     if (phone.length === 10) {
@@ -123,23 +80,41 @@ export default function LoginScreen() {
   const isFormValid = phone.length === 10 && !loading;
 
   return (
-    <>
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js" strategy="afterInteractive" />
-      <Script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js" strategy="afterInteractive" />
-      <div className="flex-1 flex flex-col bg-slate-50 h-full relative overflow-y-auto">
-        {/* Hero Section with Water Visual & Mascot */}
-        <div ref={vantaRef} className="relative h-64 bg-gradient-to-br from-[#80c8f5] via-[#48abeb] to-[#0F4C81] flex flex-col items-center justify-end pb-8 rounded-b-[2.5rem] shadow-xl overflow-hidden shrink-0">
-          
-          {/* Glassmorphic overlay for depth */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0F4C81] via-transparent to-transparent opacity-90 z-0" />
+    <div className="flex-1 flex flex-col bg-slate-50 h-full relative overflow-y-auto">
+      {/* Hero Section with Water Visual & Mascot */}
+      <div className="relative h-64 bg-gradient-to-br from-[#e0f2fe] via-[#7dd3fc] to-[#0ea5e9] flex flex-col items-center justify-end pb-8 rounded-b-[2.5rem] shadow-xl overflow-hidden shrink-0">
+        
+        {/* Animated Background Gradient */}
+        <motion.div 
+          className="absolute inset-0 z-0 bg-gradient-to-br from-[#e0f2fe] via-[#7dd3fc] to-[#0ea5e9] opacity-90"
+          animate={{
+            backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+          }}
+          transition={{
+            duration: 8,
+            ease: "linear",
+            repeat: Infinity,
+          }}
+          style={{ backgroundSize: "200% 200%" }}
+        />
 
-          <motion.div 
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            className="relative z-10 text-center flex flex-col items-center px-6"
-          >
-          <div className="w-20 h-20 mb-3 rounded-full border-4 border-white/20 bg-white shadow-[0_0_30px_rgba(0,184,169,0.3)] p-1 overflow-hidden">
+        {/* Decorative Blobs */}
+        <motion.div 
+          className="absolute top-[-20%] left-[-10%] w-64 h-64 bg-white/60 rounded-full blur-2xl z-0"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
+        
+        {/* Soft overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0ea5e9]/40 via-transparent to-transparent opacity-90 z-0" />
+
+        <motion.div 
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="relative z-10 text-center flex flex-col items-center px-6"
+        >
+          <div className="w-20 h-20 mb-3 rounded-full border-4 border-white bg-white shadow-lg p-1 overflow-hidden">
              <img 
               src="/Sardarji_RO_logo.png" 
               alt="Mascot" 
@@ -149,11 +124,11 @@ export default function LoginScreen() {
               }}
              />
           </div>
-          <div className="bg-black/30 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-white/10 shadow-xl flex flex-col items-center justify-center">
-            <h1 className="text-xl font-black text-white mb-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-tight h-8 flex items-center justify-center">
+          <div className="bg-white/30 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-white/50 shadow-xl flex flex-col items-center justify-center">
+            <h1 className="text-xl font-black text-[#0F4C81] mb-1 drop-shadow-sm tracking-tight h-8 flex items-center justify-center">
               <Typewriter texts={["Welcome to SardarJi RO..", "Sat Sri Akal Ji.."]} />
             </h1>
-            <p className="text-white font-bold text-[10px] tracking-widest uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            <p className="text-[#0ea5e9] font-bold text-[10px] tracking-widest uppercase drop-shadow-sm">
               Your Health Our Priority
             </p>
           </div>
@@ -213,6 +188,5 @@ export default function LoginScreen() {
         </motion.div>
       </div>
     </div>
-    </>
   );
 }
