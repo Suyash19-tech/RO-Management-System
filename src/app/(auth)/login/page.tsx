@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, User, MapPin } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/Buttons";
 import { PhoneInput, TextInput, TextAreaInput } from "@/components/ui/Inputs";
+import Script from "next/script";
 
 const Typewriter = ({ texts, delay = 2500 }: { texts: string[], delay?: number }) => {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
@@ -125,9 +126,12 @@ export default function LoginScreen() {
   const isFormValid = phone.length === 10 && !loading;
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 h-full relative overflow-y-auto">
-      {/* Hero Section with Water Visual & Mascot */}
-      <div ref={vantaRef} className="relative h-64 bg-[#0F4C81] flex flex-col items-center justify-end pb-8 rounded-b-[2.5rem] shadow-xl overflow-hidden shrink-0">
+    <>
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js" strategy="lazyOnload" />
+      <Script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js" strategy="lazyOnload" />
+      <div className="flex-1 flex flex-col bg-slate-50 h-full relative overflow-y-auto">
+        {/* Hero Section with Water Visual & Mascot */}
+        <div ref={vantaRef} className="relative h-64 bg-[#0F4C81] flex flex-col items-center justify-end pb-8 rounded-b-[2.5rem] shadow-xl overflow-hidden shrink-0">
 
         
         {/* Glassmorphic overlay for depth */}
@@ -213,5 +217,6 @@ export default function LoginScreen() {
         </motion.div>
       </div>
     </div>
+    </>
   );
 }

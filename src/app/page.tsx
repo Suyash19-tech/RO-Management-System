@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import Script from "next/script";
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -54,8 +55,11 @@ export default function SplashScreen() {
   }, [router]);
 
   return (
-    <div ref={vantaRef} className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F4C81] to-[#0a355c] h-[100dvh] relative overflow-hidden">
-      <motion.div 
+    <>
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js" strategy="lazyOnload" />
+      <Script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js" strategy="lazyOnload" />
+      <div ref={vantaRef} className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F4C81] to-[#0a355c] h-[100dvh] relative overflow-hidden">
+        <motion.div 
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
@@ -85,7 +89,8 @@ export default function SplashScreen() {
             Pure Water. Pure Life.
           </p>
         </motion.div>
-      </motion.div>
-    </div>
+        </motion.div>
+      </div>
+    </>
   );
 }
