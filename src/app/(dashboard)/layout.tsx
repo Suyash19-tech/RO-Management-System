@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Settings, Wrench, History, User } from "lucide-react";
@@ -21,6 +21,14 @@ const MOBILE_NAV = [
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    // Check if user is logged in
+    const profile = localStorage.getItem("customer_profile");
+    if (!profile || profile === "null" || profile === "undefined") {
+      router.push("/login");
+    }
+  }, [router]);
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-[#F8FAFC] font-sans w-full relative">

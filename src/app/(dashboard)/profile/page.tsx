@@ -36,7 +36,20 @@ export default function ProfileScreen() {
     return <WaterDropLoader />;
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full pt-20 px-6 text-center bg-[#F8FAFC]">
+        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+          <User className="w-8 h-8 text-slate-400" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-800 mb-2">Profile Not Found</h2>
+        <p className="text-sm text-slate-500 mb-6">We couldn't load your profile details. Please try logging in again.</p>
+        <button onClick={() => router.push("/login")} className="px-6 py-3 bg-[#0F4C81] text-white rounded-xl font-medium shadow-sm hover:opacity-90 active:scale-95 transition-all">
+          Go to Login
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 bg-[#F8FAFC] h-full overflow-y-auto pb-20 relative">

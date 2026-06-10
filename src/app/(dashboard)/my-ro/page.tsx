@@ -57,6 +57,17 @@ export default function MyROScreen() {
     <div className="flex-1 bg-[#F8FAFC] h-full overflow-y-auto pb-20 relative">
       {loading ? (
         <WaterDropLoader />
+      ) : !data ? (
+        <div className="flex flex-col items-center justify-center h-full pt-20 px-6 text-center">
+          <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+            <span className="text-3xl">💧</span>
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 mb-2">No RO Unit Found</h2>
+          <p className="text-sm text-slate-500 mb-6">We couldn't find an active RO unit associated with your account.</p>
+          <button onClick={() => window.location.reload()} className="px-6 py-3 bg-[#0F4C81] text-white rounded-xl font-medium shadow-sm hover:opacity-90 active:scale-95 transition-all">
+            Retry
+          </button>
+        </div>
       ) : (
         <motion.div 
           variants={container}
