@@ -11,7 +11,12 @@ import { ROHeroCard } from "@/components/my-ro/ROHeroCard";
 import { ROCareBreakdown } from "@/components/my-ro/ROCareBreakdown";
 import { ServiceUsageCard } from "@/components/my-ro/ServiceUsageCard";
 import { WaterDropLoader } from "@/components/ui/WaterDropLoader";
-import { InstallationInvoiceModal } from "@/components/ui/InvoiceModal";
+import dynamic from "next/dynamic";
+
+const InstallationInvoiceModal = dynamic(
+  () => import("@/components/ui/InvoiceModal").then(mod => mod.InstallationInvoiceModal),
+  { ssr: false }
+);
 
 export default function MyROScreen() {
 

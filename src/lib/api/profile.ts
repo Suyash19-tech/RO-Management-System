@@ -60,7 +60,7 @@ export const fetchProfile = async (): Promise<UserProfile | null> => {
     roSummary: {
       totalUnits: parsed.installations?.length || 0,
       amcStatus: parsed.amcs?.some((a: any) => a.status === 'ACTIVE') ? "ACTIVE" : "NONE",
-      totalServices: parsed.appointments?.filter((a: any) => a.status === 'COMPLETED').length || 0
+      totalServices: parsed.appointments?.filter((a: any) => a.status?.toUpperCase() === 'COMPLETED').length || 0
     },
     settings: {
       pushNotifications: true,
