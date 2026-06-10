@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 
 // --- PLACEHOLDER SLIDES ------------------------------------------------------
 // Replace these with your actual banner images (800 × 400 px recommended)
@@ -79,10 +80,12 @@ export function HeroBanner({ slides: customSlides }: HeroBannerProps) {
     >
       {/* Slide */}
       {slide.image ? (
-        <img
+        <Image
           src={slide.image}
           alt={slide.label}
-          className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ${
+          fill
+          priority={current === 0}
+          className={`object-contain transition-opacity duration-500 ${
             slide.id !== 3 ? "scale-[1.08]" : ""
           }`}
         />
