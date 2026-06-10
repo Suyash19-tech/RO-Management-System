@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowRight, User, MapPin } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/Buttons";
-import { PhoneInput, TextInput, TextAreaInput } from "@/components/ui/Inputs";
-import Script from "next/script";
+import { PhoneInput } from "@/components/ui/Inputs";
 
 const Typewriter = ({ texts, delay = 2500 }: { texts: string[], delay?: number }) => {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
@@ -51,54 +50,12 @@ export default function LoginScreen() {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const vantaRef = useRef<HTMLDivElement>(null);
-  const [vantaEffect, setVantaEffect] = useState<any>(0);
-
-  useEffect(() => {
-    let vantaEffectInstance: any = null;
-    const initVanta = () => {
-      try {
-        if (!vantaEffectInstance && vantaRef.current && (window as any).VANTA) {
-          vantaEffectInstance = (window as any).VANTA.WAVES({
-            el: vantaRef.current,
-            mouseControls: false,
-            touchControls: false,
-            gyroControls: false,
-            minHeight: 200.00,
-            minWidth: 200.00,
-            scale: 1.00,
-            scaleMobile: 1.00,
-            color: 0x4a79b3,
-            waveHeight: 15.50,
-            waveSpeed: 1.10
-          });
-          setVantaEffect(vantaEffectInstance);
-        }
-      } catch (err) {
-        console.error("Vanta failed to load:", err);
-      }
-    };
-
-    const checkVanta = setInterval(() => {
-      if ((window as any).VANTA) {
-        initVanta();
-        clearInterval(checkVanta);
-      }
-    }, 100);
-    
-    return () => {
-      clearInterval(checkVanta);
-      if (vantaEffectInstance) vantaEffectInstance.destroy();
-    };
-  }, []);
 
   const handleLogin = async () => {
     if (phone.length === 10) {
       setLoading(true);
       setError("");
       try {
-        // We call the admin portal API to verify if the customer exists
-        // In local development, Admin Portal runs on 3000. 
         const res = await fetch(`/admin-api/customers/${phone}`);
         if (!res.ok) {
           if (res.status === 404) {
@@ -111,10 +68,7 @@ export default function LoginScreen() {
         }
 
         const data = await res.json();
-        
-        // Save customer details to local storage so the customer portal can use it
         localStorage.setItem("customer_profile", JSON.stringify(data));
-        
         router.push(`/home`);
       } catch (err) {
         setError("Could not connect to the server. Please ensure the Admin portal is running.");
@@ -126,16 +80,33 @@ export default function LoginScreen() {
   const isFormValid = phone.length === 10 && !loading;
 
   return (
-    <>
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js" strategy="lazyOnload" />
-      <Script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js" strategy="lazyOnload" />
-      <div className="flex-1 flex flex-col bg-slate-50 h-full relative overflow-y-auto">
-        {/* Hero Section with Water Visual & Mascot */}
-        <div ref={vantaRef} className="relative h-64 bg-[#0F4C81] flex flex-col items-center justify-end pb-8 rounded-b-[2.5rem] shadow-xl overflow-hidden shrink-0">
+    <div className="flex-1 flex flex-col bg-slate-50 h-full relative overflow-y-auto">
+      {/* Hero Section with Water Visual & Mascot */}
+      <div className="relative h-64 bg-gradient-to-br from-[#0F4C81] via-[#00B8A9] to-[#0a355c] flex flex-col items-center justify-end pb-8 rounded-b-[2.5rem] shadow-xl overflow-hidden shrink-0">
+        
+        {/* Animated Background Gradient */}
+        <motion.div 
+          className="absolute inset-0 z-0 bg-gradient-to-br from-[#0F4C81] via-[#00B8A9] to-[#0a355c] opacity-80"
+          animate={{
+            backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+          }}
+          transition={{
+            duration: 8,
+            ease: "linear",
+            repeat: Infinity,
+          }}
+          style={{ backgroundSize: "200% 200%" }}
+        />
 
+        {/* Decorative Blobs */}
+        <motion.div 
+          className="absolute top-[-20%] left-[-10%] w-64 h-64 bg-white/10 rounded-full blur-2xl z-0"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
         
         {/* Glassmorphic overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0F4C81] via-transparent to-transparent opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0F4C81] via-transparent to-transparent opacity-90 z-0" />
 
         <motion.div 
           initial={{ y: 30, opacity: 0 }}
@@ -217,6 +188,5 @@ export default function LoginScreen() {
         </motion.div>
       </div>
     </div>
-    </>
   );
 }

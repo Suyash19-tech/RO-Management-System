@@ -1,65 +1,51 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import Script from "next/script";
 
 export default function SplashScreen() {
   const router = useRouter();
-  const vantaRef = useRef<HTMLDivElement>(null);
-  const [vantaEffect, setVantaEffect] = useState<any>(0);
 
   useEffect(() => {
-    let vantaEffectInstance: any = null;
-    const initVanta = () => {
-      try {
-        if (!vantaEffectInstance && vantaRef.current && (window as any).VANTA) {
-          vantaEffectInstance = (window as any).VANTA.WAVES({
-            el: vantaRef.current,
-            mouseControls: false,
-            touchControls: false,
-            gyroControls: false,
-            minHeight: 200.00,
-            minWidth: 200.00,
-            scale: 1.00,
-            scaleMobile: 1.00,
-            color: 0x4a79b3,
-            waveHeight: 15.50,
-            waveSpeed: 1.10
-          });
-          setVantaEffect(vantaEffectInstance);
-        }
-      } catch (err) {
-        console.error("Vanta failed to load:", err);
-      }
-    };
-
-    // Retry initialization if scripts haven't loaded yet
-    const checkVanta = setInterval(() => {
-      if ((window as any).VANTA) {
-        initVanta();
-        clearInterval(checkVanta);
-      }
-    }, 100);
-
     const timer = setTimeout(() => {
       router.push("/login");
     }, 2500);
     
     return () => {
-      clearInterval(checkVanta);
       clearTimeout(timer);
-      if (vantaEffectInstance) vantaEffectInstance.destroy();
     };
   }, [router]);
 
   return (
-    <>
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js" strategy="lazyOnload" />
-      <Script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js" strategy="lazyOnload" />
-      <div ref={vantaRef} className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F4C81] to-[#0a355c] h-[100dvh] relative overflow-hidden">
-        <motion.div 
+    <div className="flex-1 flex flex-col items-center justify-center h-[100dvh] relative overflow-hidden">
+      {/* Instant Pure CSS Animated Gradient Background */}
+      <motion.div 
+        className="absolute inset-0 z-0 bg-gradient-to-br from-[#0F4C81] via-[#00B8A9] to-[#0a355c]"
+        animate={{
+          backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+        }}
+        transition={{
+          duration: 8,
+          ease: "linear",
+          repeat: Infinity,
+        }}
+        style={{ backgroundSize: "200% 200%" }}
+      />
+      
+      {/* Decorative Blobs */}
+      <motion.div 
+        className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-white/10 rounded-full blur-3xl z-0"
+        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div 
+        className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[#00B8A9]/20 rounded-full blur-3xl z-0"
+        animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.6, 0.2] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      />
+
+      <motion.div 
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
@@ -89,8 +75,7 @@ export default function SplashScreen() {
             Pure Water. Pure Life.
           </p>
         </motion.div>
-        </motion.div>
-      </div>
-    </>
+      </motion.div>
+    </div>
   );
 }
