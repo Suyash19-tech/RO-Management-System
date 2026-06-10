@@ -21,7 +21,7 @@ export default function SplashScreen() {
     <div className="flex-1 flex flex-col items-center justify-center h-[100dvh] relative overflow-hidden">
       {/* Instant Pure CSS Animated Gradient Background */}
       <motion.div 
-        className="absolute inset-0 z-0 bg-gradient-to-br from-[#0F4C81] via-[#00B8A9] to-[#0a355c]"
+        className="absolute inset-0 z-0 bg-gradient-to-br from-[#0a2463] via-[#0F4C81] to-[#3e92cc]"
         animate={{
           backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
         }}
@@ -40,8 +40,8 @@ export default function SplashScreen() {
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div 
-        className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[#00B8A9]/20 rounded-full blur-3xl z-0"
-        animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.6, 0.2] }}
+        className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-300/20 rounded-full blur-3xl z-0"
+        animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.5, 0.2] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
       />
 

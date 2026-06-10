@@ -82,11 +82,11 @@ export default function LoginScreen() {
   return (
     <div className="flex-1 flex flex-col bg-slate-50 h-full relative overflow-y-auto">
       {/* Hero Section with Water Visual & Mascot */}
-      <div className="relative h-64 bg-gradient-to-br from-[#0F4C81] via-[#00B8A9] to-[#0a355c] flex flex-col items-center justify-end pb-8 rounded-b-[2.5rem] shadow-xl overflow-hidden shrink-0">
+      <div className="relative h-64 bg-gradient-to-br from-[#0a2463] via-[#0F4C81] to-[#3e92cc] flex flex-col items-center justify-end pb-8 rounded-b-[2.5rem] shadow-xl overflow-hidden shrink-0">
         
         {/* Animated Background Gradient */}
         <motion.div 
-          className="absolute inset-0 z-0 bg-gradient-to-br from-[#0F4C81] via-[#00B8A9] to-[#0a355c] opacity-80"
+          className="absolute inset-0 z-0 bg-gradient-to-br from-[#0a2463] via-[#0F4C81] to-[#3e92cc] opacity-80"
           animate={{
             backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
           }}
