@@ -128,7 +128,7 @@ function SummaryCard({
 export function SalesTable() {
   const [entries, setEntries] = useState<SaleEntry[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   // Settle Payment Modal & Notification States

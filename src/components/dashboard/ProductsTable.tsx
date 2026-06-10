@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export function ProductsTable() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetch('/api/products')

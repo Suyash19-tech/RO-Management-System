@@ -33,7 +33,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export function LeadsTable() {
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetch('/api/leads')

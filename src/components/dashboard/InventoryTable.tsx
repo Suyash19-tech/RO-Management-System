@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export function InventoryTable() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetch('/api/inventory')

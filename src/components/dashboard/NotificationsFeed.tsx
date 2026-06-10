@@ -46,7 +46,7 @@ function NotificationIcon({ type }: { type: string }) {
 export function NotificationsFeed() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState<"All" | "Alert" | "Warning" | "Info">("All");
 
   const getDismissedIds = (): string[] => {

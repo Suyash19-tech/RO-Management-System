@@ -43,7 +43,7 @@ function Avatar({ name }: { name: string }) {
 
 export function TechniciansTable({ search, refreshTrigger, onRefresh }: TechniciansTableProps) {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const fetchTechnicians = () => {

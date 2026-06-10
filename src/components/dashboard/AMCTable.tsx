@@ -403,7 +403,7 @@ export function AMCTable() {
   const [amcData, setAmcData] = useState<Amc[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [amcPlans, setAmcPlans] = useState<AmcPlan[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");

@@ -2,7 +2,9 @@
 
 import { Search, Users, Phone, MapPin, Calendar, ChevronRight, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 type Customer = {
   id: string;
@@ -35,17 +37,10 @@ function Avatar({ name }: { name: string }) {
 
 export function CustomersTable() {
   const router = useRouter();
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: fetchedCustomers, isLoading: loading } = useSWR("/api/customers", fetcher);
+  const customers = Array.isArray(fetchedCustomers) ? fetchedCustomers : [];
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "Active" | "Inactive">("all");
-
-  useEffect(() => {
-    fetch("/api/customers")
-      .then((res) => res.json())
-      .then((data) => { setCustomers(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
 
   const filtered = customers.filter((c) => {
     const matchSearch = !search

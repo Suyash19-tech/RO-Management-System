@@ -62,7 +62,7 @@ export function InstallationsTable({ searchTerm = "" }: { searchTerm?: string })
   const router = useRouter();
   const [installations, setInstallations] = useState<Installation[]>([]);
   const [technicians, setTechnicians] = useState<{ id: string; name: string; status: string }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const filteredInstallations = installations.filter(item => 
     item.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
