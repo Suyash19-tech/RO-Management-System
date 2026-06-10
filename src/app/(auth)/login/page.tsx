@@ -60,8 +60,8 @@ export default function LoginScreen() {
         if (!vantaEffectInstance && vantaRef.current && (window as any).VANTA) {
           vantaEffectInstance = (window as any).VANTA.WAVES({
             el: vantaRef.current,
-            mouseControls: true,
-            touchControls: true,
+            mouseControls: false,
+            touchControls: false,
             gyroControls: false,
             minHeight: 200.00,
             minWidth: 200.00,
