@@ -65,12 +65,15 @@ function getROFromCache(): ROUnitDetails | null {
 }
 
 export default function MyROScreen() {
-  const [data, setData] = useState<ROUnitDetails | null>(() => getROFromCache());
+  const [data, setData] = useState<ROUnitDetails | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [showInvoice, setShowInvoice] = useState(false);
 
   // Background refresh — no spinner, silently updates
   useEffect(() => {
+    const cached = getROFromCache();
+    if (cached) setData(cached);
+
     let mounted = true;
     fetchProfile().then(p => { if (mounted) setProfile(p); });
     fetchMyRODetails().then((res) => { if (mounted && res) setData(res); });

@@ -36,10 +36,12 @@ function getProfileFromCache(): UserProfile | null {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(() => getProfileFromCache());
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   // Background refresh — silently updates data without showing any spinner
   useEffect(() => {
+    const cached = getProfileFromCache();
+    if (cached) setProfile(cached);
     fetchProfile().then(data => { if (data) setProfile(data); });
   }, []);
 

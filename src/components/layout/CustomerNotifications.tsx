@@ -49,39 +49,60 @@ export function CustomerNotifications() {
 
   const loadNotifications = async () => {
     try {
-      // fetchTickets already synchronizes with the backend under the hood
-      const tickets = await fetchTickets();
-      if (!tickets || tickets.length === 0) return;
-      
-      const generated: CustomerNotification[] = [];
-
-      tickets.forEach((t) => {
-        if (!t || !t.rawId) return;
-        
-        // 1. Assignment & Confirmation
-        if (t.status === "ASSIGNED" || t.status === "ACCEPTED" || t.status === "IN_PROGRESS") {
-          generated.push({
-            id: `confirmed-${t.rawId}`,
+      // 1. Fetch real notifications from the backend
+      let realNotifs: CustomerNotification[] = [];
+      try {
+        let phone = "9876543210";
+        if (typeof window !== "undefined") {
+          const profile = localStorage.getItem("customer_profile");
+          if (profile) {
+            const parsed = JSON.parse(profile);
+            if (parsed.phone) phone = parsed.phone;
+          }
+        }
+        const res = await fetch(`http://localhost:3001/api/customer-notifications?phone=${phone}`);
+        if (res.ok) {
+          const data = await res.json();
+          realNotifs = data.map((n: any) => ({
+            id: n.id,
             type: "Info",
-            title: "Service Confirmed!",
-            message: `Tech Assigned: ${t.technician?.name || 'Our Technician'}`,
-            link: `/history/${t.id}`,
-            date: new Date(t.createdAt).getTime(),
-          });
+            title: n.title,
+            message: n.message,
+            link: "/notifications", // Link to full notifications page if you have one, or just "#"
+            date: new Date(n.createdAt).getTime(),
+          }));
         }
-        
-        // 2. Invoice Generated
-        if (t.status === "COMPLETED") {
-          generated.push({
-            id: `invoice-${t.rawId}`,
-            type: "Success",
-            title: "Invoice Ready",
-            message: "Service completed. Tap to view.",
-            link: `/history/${t.id}`,
-            date: t.completedAt ? new Date(t.completedAt).getTime() : Date.now(),
-          });
-        }
-      });
+      } catch (e) {}
+
+      // 2. Fetch ticket-based notifications
+      const tickets = await fetchTickets();
+      const generated: CustomerNotification[] = [...realNotifs];
+
+      if (tickets && tickets.length > 0) {
+        tickets.forEach((t) => {
+          if (!t || !t.rawId) return;
+          if (t.status === "ASSIGNED" || t.status === "ACCEPTED" || t.status === "IN_PROGRESS") {
+            generated.push({
+              id: `confirmed-${t.rawId}`,
+              type: "Info",
+              title: "Service Confirmed!",
+              message: `Tech Assigned: ${t.technician?.name || 'Our Technician'}`,
+              link: `/history/${t.id}`,
+              date: new Date(t.createdAt).getTime(),
+            });
+          }
+          if (t.status === "COMPLETED") {
+            generated.push({
+              id: `invoice-${t.rawId}`,
+              type: "Success",
+              title: "Invoice Ready",
+              message: "Service completed. Tap to view.",
+              link: `/history/${t.id}`,
+              date: t.completedAt ? new Date(t.completedAt).getTime() : Date.now(),
+            });
+          }
+        });
+      }
 
       // Sort newest first
       generated.sort((a, b) => b.date - a.date);
