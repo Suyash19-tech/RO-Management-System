@@ -1,12 +1,54 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const statusFilter = searchParams.get('status');
+
+    // Fetch existing AMC contracts
     const amcs = await prisma.amc.findMany({
       orderBy: { createdAt: 'desc' },
     });
-    return NextResponse.json(amcs);
+
+    // If filtering by "No AMC" or "All", we should calculate people who have >1 year installations and NO active AMC
+    let noAmcDues: any[] = [];
+    if (statusFilter === 'All' || statusFilter === 'No AMC') {
+      const customers = await prisma.customer.findMany({
+        include: {
+          installations: { orderBy: { date: 'desc' } },
+          amcs: { orderBy: { endDate: 'desc' } }
+        }
+      });
+
+      const now = new Date();
+      const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
+
+      customers.forEach(customer => {
+        if (customer.installations.length === 0) return;
+        const primaryInstall = customer.installations[0];
+        const installDate = primaryInstall.date;
+        const timeSinceInstall = now.getTime() - installDate.getTime();
+        
+        const hasActiveAmc = customer.amcs.some(amc => amc.endDate > now && amc.status === 'Active');
+
+        if (timeSinceInstall > oneYearInMs && !hasActiveAmc) {
+          noAmcDues.push({
+            id: `NO-AMC-${customer.id.substring(0, 8)}`, // Fake ID for the table
+            customerName: customer.name,
+            customerPhone: customer.phone,
+            address: customer.address,
+            plan: 'None',
+            startDate: primaryInstall.date,
+            endDate: primaryInstall.date,
+            status: 'No AMC',
+            payment: 'Pending'
+          });
+        }
+      });
+    }
+
+    return NextResponse.json([...amcs, ...noAmcDues]);
   } catch (error) {
     console.error('Failed to fetch AMCs:', error);
     return NextResponse.json({ error: 'Failed to fetch AMCs' }, { status: 500 });

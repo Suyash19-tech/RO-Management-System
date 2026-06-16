@@ -61,6 +61,7 @@ const sidebarGroups: SidebarGroup[] = [
     items: [
       { name: "Client Directory", href: "/dashboard/customers", icon: Users },
       { name: "Service Contracts (AMC)", href: "/dashboard/amc", icon: Calendar },
+      { name: "Service Reminders", href: "/dashboard/reminders", icon: Bell },
     ]
   },
   {

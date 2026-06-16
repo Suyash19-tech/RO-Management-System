@@ -206,6 +206,64 @@ export async function GET() {
       });
     }
 
+    // 6. Free Service and AMC Reminders
+    const customers = await prisma.customer.findMany({
+      include: {
+        installations: { orderBy: { date: 'desc' } },
+        amcs: { orderBy: { endDate: 'desc' } },
+        appointments: { 
+          where: { status: 'Completed' },
+          orderBy: { date: 'desc' }
+        }
+      }
+    });
+
+    const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
+    const sixtyDaysInMs = 60 * 24 * 60 * 60 * 1000;
+
+    customers.forEach(customer => {
+      if (customer.installations.length === 0) return;
+      const primaryInstall = customer.installations[0];
+      const installDate = primaryInstall.date;
+      const timeSinceInstall = now.getTime() - installDate.getTime();
+      
+      const hasActiveAmc = customer.amcs.some(amc => new Date(amc.endDate) > now && amc.status === 'Active');
+
+      if (timeSinceInstall > oneYearInMs) {
+        if (!hasActiveAmc) {
+          notifications.push({
+            id: `amc-due-${customer.id}`,
+            type: 'Warning',
+            title: 'AMC Renewal Due',
+            message: `${customer.name} has completed 1 year without AMC.`,
+            time: 'Over 1 Year',
+            date: installDate,
+            link: '/dashboard/reminders',
+            read: false
+          });
+        }
+      } else {
+        let lastServiceDate = installDate;
+        if (customer.appointments.length > 0) {
+          lastServiceDate = customer.appointments[0].completedAt || customer.appointments[0].date;
+        }
+
+        const timeSinceLastService = now.getTime() - new Date(lastServiceDate).getTime();
+        if (timeSinceLastService > sixtyDaysInMs) {
+          notifications.push({
+            id: `service-due-${customer.id}`,
+            type: 'Info',
+            title: 'Free Service Due',
+            message: `${customer.name} is due for their bi-monthly free service.`,
+            time: '> 60 days since last service',
+            date: lastServiceDate,
+            link: '/dashboard/reminders',
+            read: false
+          });
+        }
+      }
+    });
+
     // Sort notifications by date (newest/most urgent first)
     // Urgent types (Alert) bubble to top, then sorted by date
     notifications.sort((a, b) => {

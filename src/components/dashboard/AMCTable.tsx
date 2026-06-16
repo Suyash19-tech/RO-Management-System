@@ -64,6 +64,7 @@ function StatusBadge({ status }: { status: string }) {
     "Expiring Soon": "bg-amber-50 text-amber-700 border-amber-200 shadow-sm shadow-amber-50",
     "Expired": "bg-rose-50 text-rose-700 border-rose-200",
     "Renewed": "bg-slate-100 text-slate-500 border-slate-300",
+    "No AMC": "bg-slate-900 text-white border-slate-700",
   };
   
   return (
@@ -453,7 +454,6 @@ export function AMCTable() {
 
   /* --------------- Effects --------------- */
   useEffect(() => {
-    fetchAMCs();
     fetchCustomers();
     fetchFormOptions();
   }, []);
@@ -468,10 +468,10 @@ export function AMCTable() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* --------------- Data Fetching --------------- */
   const fetchAMCs = async () => {
     try {
-      const res = await fetch('/api/amc');
+      setLoading(true);
+      const res = await fetch(`/api/amc?status=${statusFilter}`);
       if (!res.ok) throw new Error("Failed");
       const data = await res.json();
       const items = Array.isArray(data) ? data : [];
@@ -487,6 +487,10 @@ export function AMCTable() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchAMCs();
+  }, [statusFilter]);
 
   const fetchCustomers = async () => {
     try {
@@ -974,6 +978,7 @@ export function AMCTable() {
               <option value="Active">Active</option>
               <option value="Expiring Soon">Expiring Soon</option>
               <option value="Expired">Expired</option>
+              <option value="No AMC">No AMC</option>
             </select>
           </div>
 
@@ -1047,8 +1052,17 @@ export function AMCTable() {
                       <div className="flex items-start gap-2.5 text-slate-600">
                         <CalendarDays className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                         <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-800 whitespace-nowrap">{formatDate(item.startDate)}</span>
-                          <span className="text-xs text-slate-400 mt-0.5 whitespace-nowrap">to {formatDate(item.endDate)}</span>
+                          {item.status === "No AMC" ? (
+                            <>
+                              <span className="text-sm font-bold text-slate-800 whitespace-nowrap">Inst: {formatDate(item.startDate)}</span>
+                              <span className="text-xs text-rose-500 font-bold mt-0.5 whitespace-nowrap">> 1 Year Ago</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-sm font-bold text-slate-800 whitespace-nowrap">{formatDate(item.startDate)}</span>
+                              <span className="text-xs text-slate-400 mt-0.5 whitespace-nowrap">to {formatDate(item.endDate)}</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </td>
