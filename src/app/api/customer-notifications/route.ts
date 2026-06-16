@@ -60,8 +60,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(notification, { status: 201, headers: { 'Access-Control-Allow-Origin': '*' } });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to create customer notification:', error);
-    return NextResponse.json({ error: 'Failed to create customer notification' }, { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } });
+    return NextResponse.json({ error: error.message || 'Failed to create customer notification' }, { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } });
   }
 }
