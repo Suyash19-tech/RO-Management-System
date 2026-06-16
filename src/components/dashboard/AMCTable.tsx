@@ -577,8 +577,25 @@ export function AMCTable() {
     }
   };
 
-  const handleSendReminder = (item: Amc) => {
-    showToast(`Renewal reminder successfully sent to ${item.customerName} via SMS & Email!`, "info");
+  const handleSendReminder = async (item: Amc) => {
+    try {
+      const res = await fetch('/api/customer-notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: item.customerPhone || '9876543210',
+          type: 'AMC',
+          title: 'AMC Expiring Soon',
+          message: `Hello ${item.customerName}, your Comprehensive AMC is expiring soon. Renew now to avoid interruption in coverage.`
+        })
+      });
+
+      if (!res.ok) throw new Error('Failed to send');
+
+      showToast(`Renewal App Reminder successfully sent to ${item.customerName}!`, "success");
+    } catch (e) {
+      showToast("Failed to send reminder.", "warning");
+    }
   };
 
   const handleAddSubmit = async (e: React.FormEvent) => {
