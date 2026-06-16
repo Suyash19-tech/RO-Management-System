@@ -19,12 +19,7 @@ type Reminder = {
 
 export function RemindersList() {
   const [activeTab, setActiveTab] = useState<"FREE" | "AMC">("FREE");
-  const { data, isLoading } = useSWR<{ freeServiceDues: Reminder[]; amcDues: Reminder[] }>("/api/reminders", fetcher);
-
-  const handleSendReminder = (reminder: Reminder, type: "FREE" | "AMC") => {
-    // In a real production app, this would hit an API to push to the customer app.
-    toast.success(`Reminder sent to ${reminder.name}'s application!`);
-  };
+  const { data, error, isLoading } = useSWR<{ freeServiceDues: Reminder[]; amcDues: Reminder[] }>("/api/reminders", fetcher);
 
   if (isLoading) {
     return (

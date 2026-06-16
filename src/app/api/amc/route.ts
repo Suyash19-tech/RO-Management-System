@@ -32,7 +32,8 @@ export async function GET(request: Request) {
         
         const hasActiveAmc = customer.amcs.some(amc => amc.endDate > now && amc.status === 'Active');
 
-        if (timeSinceInstall > oneYearInMs && !hasActiveAmc) {
+        // Show everyone who doesn't have an active AMC
+        if (!hasActiveAmc) {
           noAmcDues.push({
             id: `NO-AMC-${customer.id.substring(0, 8)}`, // Fake ID for the table
             customerName: customer.name,

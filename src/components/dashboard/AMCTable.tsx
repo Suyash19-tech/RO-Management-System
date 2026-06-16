@@ -1055,7 +1055,15 @@ export function AMCTable() {
                           {item.status === "No AMC" ? (
                             <>
                               <span className="text-sm font-bold text-slate-800 whitespace-nowrap">Inst: {formatDate(item.startDate)}</span>
-                              <span className="text-xs text-rose-500 font-bold mt-0.5 whitespace-nowrap">&gt; 1 Year Ago</span>
+                              <span className={`text-xs font-bold mt-0.5 whitespace-nowrap ${
+                                new Date().getTime() - new Date(item.startDate).getTime() > 365 * 24 * 60 * 60 * 1000 
+                                  ? 'text-rose-500' 
+                                  : 'text-amber-500'
+                              }`}>
+                                {new Date().getTime() - new Date(item.startDate).getTime() > 365 * 24 * 60 * 60 * 1000 
+                                  ? '> 1 Year Ago' 
+                                  : 'Under Free Service'}
+                              </span>
                             </>
                           ) : (
                             <>
