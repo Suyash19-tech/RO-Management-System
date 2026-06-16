@@ -12,7 +12,16 @@ export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    fetchNotifications().then(data => { setNotifications(data); });
+    let phone = "9876543210";
+    try {
+      const profile = localStorage.getItem("customer_profile");
+      if (profile) {
+        const parsed = JSON.parse(profile);
+        if (parsed.phone) phone = parsed.phone;
+      }
+    } catch (e) {}
+
+    fetchNotifications(phone).then(data => { setNotifications(data || []); });
   }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
