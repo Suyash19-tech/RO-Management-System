@@ -29,7 +29,7 @@ const ISSUES = [
   { id: "Leakage",              icon: ShieldAlert, color: "from-red-500 to-rose-400",     bg: "bg-red-50",    text: "text-red-600", borderActive: "border-red-100 bg-red-50/20", checkBg: "bg-red-500", shadow: "shadow-[0_8px_24px_rgba(239,68,68,0.12)]" },
   { id: "Noise Issue",          icon: Volume2,     color: "from-purple-500 to-violet-400",bg: "bg-purple-50", text: "text-purple-600", borderActive: "border-purple-100 bg-purple-50/20", checkBg: "bg-purple-500", shadow: "shadow-[0_8px_24px_rgba(168,85,247,0.12)]" },
   { id: "Filter Replacement",   icon: Sparkles,    color: "from-amber-500 to-yellow-400", bg: "bg-amber-50",  text: "text-amber-600", borderActive: "border-amber-100 bg-amber-50/20", checkBg: "bg-amber-500", shadow: "shadow-[0_8px_24px_rgba(245,158,11,0.12)]" },
-  { id: "General Service",      icon: Wrench,      color: "from-slate-500 to-gray-400",   bg: "bg-slate-50",  text: "text-slate-600", borderActive: "border-slate-200 bg-slate-50/20", checkBg: "bg-slate-600", shadow: "shadow-[0_8px_24px_rgba(100,116,139,0.12)]" },
+  { id: "Regular Maintenance",  icon: Wrench,      color: "from-emerald-500 to-teal-400", bg: "bg-emerald-50",text: "text-emerald-600", borderActive: "border-emerald-200 bg-emerald-50/20", checkBg: "bg-emerald-600", shadow: "shadow-[0_8px_24px_rgba(16,185,129,0.12)]" },
   { id: "Other",                icon: Plus,        color: "from-indigo-500 to-blue-400",  bg: "bg-indigo-50", text: "text-indigo-600", borderActive: "border-indigo-100 bg-indigo-50/20", checkBg: "bg-indigo-500", shadow: "shadow-[0_8px_24px_rgba(99,102,241,0.12)]" },
 ];
 

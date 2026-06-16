@@ -5,46 +5,27 @@ export interface Notification {
   type: NotificationType;
   title: string;
   message: string;
-  timestamp: string;
+  createdAt?: string;
+  timestamp?: string;
   read: boolean;
 }
 
-export const fetchNotifications = async (): Promise<Notification[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+export const fetchNotifications = async (phone: string = "9876543210"): Promise<Notification[]> => {
+  try {
+    const res = await fetch(`http://localhost:3001/api/customer-notifications?phone=${phone}`);
+    if (res.ok) {
+      const data = await res.json();
+      return data.map((n: any) => ({
+        ...n,
+        timestamp: n.createdAt
+      }));
+    }
+  } catch (error) {
+    console.error("Failed to fetch real notifications, falling back to mock", error);
+  }
   
+  // Fallback to mock data if API is down
   return [
-    {
-      id: "n1",
-      type: "SERVICE",
-      title: "Technician Assigned",
-      message: "Rajesh Kumar has been assigned to your service request (TKT-4921).",
-      timestamp: new Date().toISOString(),
-      read: false
-    },
-    {
-      id: "n2",
-      type: "REMINDER",
-      title: "Filter Life Low",
-      message: "Your pre-filter is nearing end of life. Book a service soon.",
-      timestamp: new Date(Date.now() - 3600000 * 24).toISOString(),
-      read: false
-    },
-    {
-      id: "n3",
-      type: "AMC",
-      title: "AMC Expiring in 35 days",
-      message: "Your Comprehensive Gold AMC is expiring soon. Renew now to avoid interruption in coverage.",
-      timestamp: new Date(Date.now() - 3600000 * 48).toISOString(),
-      read: true
-    },
-    {
-      id: "n4",
-      type: "PROMOTION",
-      title: "Monsoon Discount!",
-      message: "Get 20% off on all spare parts this monsoon season.",
-      timestamp: new Date(Date.now() - 3600000 * 120).toISOString(),
-      read: true
-    },
     {
       id: "n5",
       type: "SYSTEM",
@@ -57,6 +38,7 @@ export const fetchNotifications = async (): Promise<Notification[]> => {
 };
 
 export const markNotificationRead = async (id: string) => {
+  // Can be implemented by PUT to /api/customer-notifications/[id]
   await new Promise((resolve) => setTimeout(resolve, 500));
   return true;
 };
