@@ -529,6 +529,7 @@ export default function CustomerProfilePage() {
           received={invoiceInst.amountPaid || 0}
           paymentMethod={invoiceInst.paymentMethod || "Cash"}
           date={invoiceInst.date}
+          defaultGstEnabled={invoiceInst.totalPrice > ((invoiceInst.roPrice || 0) + (invoiceInst.equipmentPrice || 0) + (invoiceInst.amcPrice || 0) - (invoiceInst.discount || 0) + 1)}
         />
       )}
 

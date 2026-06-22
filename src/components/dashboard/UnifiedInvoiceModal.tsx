@@ -22,6 +22,7 @@ interface UnifiedInvoiceProps {
   paymentMethod: string;
   date?: string | Date;
   onCollectPayment?: () => void;
+  defaultGstEnabled?: boolean;
 }
 
 // Convert numbers to words (Indian Rupee style)
@@ -60,7 +61,8 @@ export function UnifiedInvoiceModal({
   received,
   paymentMethod,
   date,
-  onCollectPayment
+  onCollectPayment,
+  defaultGstEnabled = false
 }: UnifiedInvoiceProps) {
   // 1. Business & Header Info State (Defaulting to Amar Enterprises & traditional formats)
   const [businessName, setBusinessName] = useState("Aman Enterprises");
@@ -82,7 +84,7 @@ export function UnifiedInvoiceModal({
   const [datedField, setDatedField] = useState("");
 
   // 3. Financial & GST Config
-  const [gstEnabled, setGstEnabled] = useState(false);
+  const [gstEnabled, setGstEnabled] = useState(defaultGstEnabled);
   const [gstPercentage, setGstPercentage] = useState(18);
   const [previousBalance, setPreviousBalance] = useState(0);
   const [paymentMode, setPaymentMode] = useState(paymentMethod || "Cash");

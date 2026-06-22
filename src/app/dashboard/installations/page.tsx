@@ -53,13 +53,14 @@ export default function InstallationsPage() {
     discount: 0,
     paymentMethod: "Cash",
     amountPaid: 0,
-    generateInvoice: true
+    generateInvoice: true,
+    gstEnabled: false
   });
 
   const equipmentPriceTotal = form.selectedEquipments.reduce((acc, eq) => acc + eq.price, 0);
   const baseTotal = form.modelPrice + equipmentPriceTotal + form.amcPrice;
   const subTotalAfterDiscount = Math.max(0, baseTotal - (form.discount || 0));
-  const gstAmount = subTotalAfterDiscount * 0.18;
+  const gstAmount = form.gstEnabled ? (subTotalAfterDiscount * 0.18) : 0;
   const grandTotal = subTotalAfterDiscount + gstAmount;
   const amountDue = Math.max(0, grandTotal - (form.amountPaid || 0));
 
@@ -185,7 +186,8 @@ export default function InstallationsPage() {
         selectedEquipments: [],
         amcPlanName: "", amcPrice: 0,
         servicesCount: 4, expiryDate: "",
-        discount: 0, paymentMethod: "Cash", amountPaid: 0, generateInvoice: true
+        discount: 0, paymentMethod: "Cash", amountPaid: 0, generateInvoice: true,
+        gstEnabled: false
       });
       setIsModalOpen(false);
       setCurrentStep(1);
@@ -437,10 +439,16 @@ export default function InstallationsPage() {
                        <Receipt className="w-5 h-5 text-blue-600" />
                        <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-widest">Phase 3: Billing & Finance</h3>
                     </div>
-                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer hover:text-blue-600 transition-colors">
-                      <input type="checkbox" checked={form.generateInvoice} onChange={e => setForm({...form, generateInvoice: e.target.checked})} className="rounded text-blue-600 focus:ring-blue-500" />
-                      <FileText className="w-4 h-4" /> Gen Invoice
-                    </label>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 text-xs font-bold text-slate-650 cursor-pointer hover:text-blue-600 transition-colors">
+                        <input type="checkbox" checked={form.generateInvoice} onChange={e => setForm({...form, generateInvoice: e.target.checked})} className="rounded text-blue-600 focus:ring-blue-500" />
+                        <FileText className="w-4 h-4" /> Gen Invoice
+                      </label>
+                      <label className="flex items-center gap-2 text-xs font-bold text-slate-650 cursor-pointer hover:text-blue-600 transition-colors ml-auto">
+                        <input type="checkbox" checked={form.gstEnabled} onChange={e => setForm({...form, gstEnabled: e.target.checked})} className="rounded text-blue-600 focus:ring-blue-500" />
+                        <IndianRupee className="w-4 h-4" /> Include GST (18%)
+                      </label>
+                    </div>
                   </div>
 
                   <div className="bg-slate-50 p-5 rounded-2xl flex flex-col gap-3 border border-slate-200">
@@ -464,14 +472,16 @@ export default function InstallationsPage() {
                        </div>
                      </div>
 
-                     <div className="flex justify-between items-center text-xs font-bold text-slate-600 pt-2 border-t border-slate-200 border-dashed">
+                     <div className="flex justify-between items-center text-xs font-bold text-slate-650 pt-2 border-t border-slate-200 border-dashed">
                        <span>Subtotal</span>
                        <span>₹{subTotalAfterDiscount.toLocaleString()}</span>
                      </div>
-                     <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                       <span>GST (18%)</span>
-                       <span>₹{gstAmount.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</span>
-                     </div>
+                     {form.gstEnabled && (
+                       <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                         <span>GST (18%)</span>
+                         <span>₹{gstAmount.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</span>
+                       </div>
+                     )}
                      
                      <div className="flex justify-between items-center text-sm font-black text-slate-900 pt-3 border-t border-slate-300">
                        <span className="uppercase tracking-widest text-slate-600 text-xs">Grand Total</span>
@@ -610,6 +620,7 @@ export default function InstallationsPage() {
           received={invoiceInst.amountPaid || 0}
           paymentMethod={invoiceInst.paymentMethod || "Cash"}
           date={invoiceInst.date}
+          defaultGstEnabled={invoiceInst.totalPrice > ((invoiceInst.roPrice || 0) + (invoiceInst.equipmentPrice || 0) + (invoiceInst.amcPrice || 0) - (invoiceInst.discount || 0) + 1)}
         />
       )}
     </div>
