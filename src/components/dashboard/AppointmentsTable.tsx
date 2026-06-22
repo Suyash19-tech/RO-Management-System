@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import {
   Calendar, MapPin, Clock, User, Wrench,
   CheckCircle2, X, Plus, Trash2, FileText, IndianRupee,
-  Package, MessageSquare, ClipboardCheck, Download,
+  Package, MessageSquare, ClipboardCheck, Download, Receipt,
   ChevronRight, ChevronLeft, Phone, Search
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -128,7 +128,7 @@ export function InvoiceView({ apt, onClose, onUpdate }: { apt: Appointment; onCl
 /* ═══════════════════════════════════════════════════
    STEP-BY-STEP COMPLETION WIZARD
 ═══════════════════════════════════════════════════ */
-const STEPS = ["Review", "Parts & Items", "Billing", "Done"];
+const STEPS = ["Review", "Parts & Items", "Confirmation", "Billing", "Done"];
 
 function StepBar({ step }: { step: number }) {
   return (
@@ -167,6 +167,9 @@ function CompletionWizard({
   const [saving, setSaving] = useState(false);
   const [completedApt, setCompletedApt] = useState<Appointment | null>(null);
   const [availableProducts, setAvailableProducts] = useState<any[]>([]);
+  const [visitingCharge, setVisitingCharge] = useState(() => 
+    apt.type.includes("Paid Service") ? 299 : 0
+  );
 
   useEffect(() => {
     fetch("/api/products")
@@ -184,7 +187,7 @@ function CompletionWizard({
   }, []);
 
   const partsTotal = items.reduce((s, i) => s + i.cost * i.qty, 0);
-  const baseCharge = apt.type.includes("Paid Service") ? 299 : 0;
+  const baseCharge = visitingCharge;
   const totalCost = baseCharge + partsTotal;
 
   const addItem = () => setItems((p) => [...p, { name: "", qty: 1, cost: 0 }]);
@@ -387,8 +390,81 @@ function CompletionWizard({
             </div>
           )}
 
-          {/* ── STEP 2: BILLING ── */}
+          {/* ── STEP 2: CONFIRMATION LEDGER ── */}
           {step === 2 && (
+            <div className="p-6 flex flex-col gap-5 animate-in slide-in-from-right-4 duration-300">
+              <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                <Receipt className="w-5 h-5 text-blue-600" />
+                <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-widest">Confirm Items & Prices</h3>
+              </div>
+
+              <div className="bg-slate-50/50 border border-slate-200 rounded-xl overflow-hidden text-xs">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      <th className="py-2.5 px-4 font-bold">Item Description</th>
+                      <th className="py-2.5 px-4 font-bold text-right w-36">Price (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {/* Visiting Charge */}
+                    <tr className="bg-white">
+                      <td className="py-3 px-4 font-bold text-slate-800">
+                        Visiting Charge <span className="text-[10px] text-slate-400 block font-normal mt-0.5">Service Visit Fee</span>
+                      </td>
+                      <td className="py-2.5 px-4">
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
+                          <input 
+                            type="number"
+                            value={visitingCharge}
+                            onChange={(e) => setVisitingCharge(Number(e.target.value))}
+                            className="w-full pl-6 pr-2 py-1.5 font-bold text-right border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 bg-white"
+                          />
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Parts list */}
+                    {items.map((item, idx) => (
+                      <tr key={idx} className="bg-white">
+                        <td className="py-3 px-4 font-bold text-slate-800">
+                          {item.name} <span className="text-[10px] text-slate-400 block font-normal mt-0.5">Qty: {item.qty}</span>
+                        </td>
+                        <td className="py-2.5 px-4">
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
+                            <input 
+                              type="number"
+                              value={item.cost}
+                              onChange={(e) => {
+                                const newPrice = Number(e.target.value);
+                                setItems(prev => prev.map((val, i) => 
+                                  i === idx ? { ...val, cost: newPrice } : val
+                                ));
+                              }}
+                              className="w-full pl-6 pr-2 py-1.5 font-bold text-right border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 bg-white"
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {items.length === 0 && (
+                      <tr className="bg-white">
+                        <td colSpan={2} className="py-4 px-4 text-center text-slate-400 font-medium">
+                          No extra parts/spares added.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── STEP 3: BILLING ── */}
+          {step === 3 && (
             <div className="p-6 flex flex-col gap-5">
               {/* Summary */}
               <div className="bg-slate-50 rounded-2xl border border-slate-200 p-5">
@@ -465,8 +541,8 @@ function CompletionWizard({
             </div>
           )}
 
-          {/* ── STEP 3: DONE ── */}
-          {step === 3 && (
+          {/* ── STEP 4: DONE ── */}
+          {step === 4 && (
             <div className="p-8 flex flex-col items-center justify-center text-center gap-4">
               <div className="w-20 h-20 rounded-full bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center">
                 <CheckCircle2 className="w-10 h-10 text-emerald-500" />
@@ -495,8 +571,8 @@ function CompletionWizard({
           )}
         </div>
 
-        {/* Footer Nav — hidden on step 3 */}
-        {step < 3 && (
+        {/* Footer Nav — hidden on step 4 */}
+        {step < 4 && (
           <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between shrink-0 bg-slate-50">
             <button
               onClick={() => step > 0 ? setStep(step - 1) : onClose()}
@@ -505,11 +581,11 @@ function CompletionWizard({
               <ChevronLeft className="w-4 h-4" /> {step === 0 ? "Cancel" : "Back"}
             </button>
             <div className="flex items-center gap-1.5">
-              {[0, 1, 2].map((i) => (
+              {[0, 1, 2, 3].map((i) => (
                 <div key={i} className={`h-1.5 rounded-full transition-all ${i === step ? "w-6 bg-[#0B1B3D]" : i < step ? "w-3 bg-emerald-400" : "w-3 bg-slate-200"}`} />
               ))}
             </div>
-            {step < 2 ? (
+            {step < 3 ? (
               <button onClick={() => setStep(step + 1)} className="flex items-center gap-2 px-5 py-2.5 bg-[#0B1B3D] text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors">
                 Next <ChevronRight className="w-4 h-4" />
               </button>
