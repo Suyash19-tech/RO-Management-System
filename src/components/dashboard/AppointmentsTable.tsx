@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { UnifiedInvoiceModal } from "./UnifiedInvoiceModal";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 
@@ -70,111 +71,55 @@ function fmt(d?: string | null) {
    PROFESSIONAL INVOICE
 ═══════════════════════════════════════════════════ */
 export function InvoiceView({ apt, onClose }: { apt: Appointment; onClose: () => void }) {
-  const items: LineItem[] = (() => { try { return apt.itemsUsed ? JSON.parse(apt.itemsUsed) : []; } catch { return []; } })();
+  const parsedItems: LineItem[] = (() => { try { return apt.itemsUsed ? JSON.parse(apt.itemsUsed) : []; } catch { return []; } })();
   const total = apt.costCharged ?? 0;
-  const invoiceNo = `SVC-${apt.id.slice(-8).toUpperCase()}-${new Date(apt.completedAt || apt.date).getFullYear()}`;
+  
+  const items = [];
+  const hasItems = parsedItems.length > 0;
+  const isPaidService = apt.type.includes("Paid Service");
+  
+  if (!hasItems && !isPaidService) {
+    items.push({
+      name: `${apt.type.split(" — ")[0]} — Visiting Charge`,
+      qty: 1,
+      unit: 'Pcs',
+      price: total,
+      amount: total
+    });
+  } else {
+    items.push({
+      name: `${apt.type.split(" — ")[0]} — Visiting Charge`,
+      qty: 1,
+      unit: 'Pcs',
+      price: isPaidService ? 299 : 0,
+      amount: isPaidService ? 299 : 0
+    });
+    parsedItems.forEach((item) => {
+      items.push({
+        name: item.name,
+        qty: item.qty,
+        unit: 'Pcs',
+        price: item.cost,
+        amount: item.cost * item.qty
+      });
+    });
+  }
 
+  const received = apt.paymentStatus === 'Paid' ? total : 0;
+  
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/70 backdrop-blur-sm overflow-y-auto p-4 sm:p-8">
-      <style dangerouslySetInnerHTML={{ __html: `@media print { @page { margin:15mm; size:A4; } body *{visibility:hidden} #svc-printable,#svc-printable *{visibility:visible} #svc-printable{position:absolute;left:0;top:0;width:100%;background:white!important;box-shadow:none!important;border:none!important;padding:0!important;margin:0!important} .no-print{display:none!important} }` }} />
-      <div className="w-full max-w-3xl mx-auto flex flex-col gap-4 my-2 sm:my-8">
-        <div className="no-print flex justify-end gap-2">
-          <button onClick={() => window.print()} className="flex-1 sm:flex-none justify-center px-5 py-3.5 sm:py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl shadow-lg flex items-center gap-2 transition-colors">
-            <Download className="w-4 h-4" /> Save as PDF / Print
-          </button>
-          <button onClick={onClose} className="p-3 bg-white hover:bg-slate-100 text-slate-600 rounded-xl shadow-lg transition-colors flex items-center justify-center shrink-0"><X className="w-5 h-5" /></button>
-        </div>
-
-        <div id="svc-printable" className="bg-white w-full rounded-xl shadow-2xl p-6 sm:p-12 border border-slate-200">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border-b-2 border-black pb-6 mb-8">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight">SARDARJI RO</h1>
-              <p className="text-slate-600 mt-1 text-sm font-medium">Pure Water Solutions & AMC Experts</p>
-              <p className="text-slate-600 text-sm mt-0.5">Delhi NCR Region, India</p>
-              <p className="text-slate-600 text-sm font-medium mt-0.5">GSTIN: 07ABCDE1234F1Z5</p>
-            </div>
-            <div className="text-left sm:text-right">
-              <h2 className="text-3xl sm:text-4xl font-black text-slate-200 uppercase tracking-widest">Invoice</h2>
-              <p className="text-slate-900 font-bold mt-2">{invoiceNo}</p>
-              <p className="text-slate-600 font-medium text-sm">Date: {new Date(apt.completedAt || apt.date).toLocaleDateString("en-IN")}</p>
-              <div className="mt-2">
-                {apt.paymentStatus === "Free" ? <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full uppercase">Free Service</span>
-                  : apt.paymentStatus === "Paid" ? <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full uppercase">Paid</span>
-                  : <span className="px-3 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full uppercase">Unpaid</span>}
-              </div>
-            </div>
-          </div>
-
-          {/* Bill To */}
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-10">
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Billed To</p>
-              <h3 className="text-lg font-bold text-black">{apt.customerName}</h3>
-              <p className="text-slate-600 font-medium text-sm mt-1">{apt.address}</p>
-              {apt.customerPhone && <p className="text-slate-600 font-medium text-sm mt-0.5">Ph: {apt.customerPhone}</p>}
-            </div>
-            <div className="text-left sm:text-right w-full sm:w-auto p-4 sm:p-0 bg-slate-50 sm:bg-transparent rounded-lg border border-slate-100 sm:border-0">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Service Details</p>
-              <p className="text-slate-900 font-bold text-sm">{apt.type}</p>
-              <p className="text-slate-600 font-medium text-sm mt-0.5"><span className="text-slate-500">Technician:</span> {apt.tech}</p>
-              <p className="text-slate-600 font-medium text-sm mt-0.5"><span className="text-slate-500">Ticket:</span> {apt.id.slice(-8).toUpperCase()}</p>
-              <p className="text-slate-600 font-medium text-sm mt-0.5"><span className="text-slate-500">Payment:</span> {apt.paymentStatus || "—"}</p>
-            </div>
-          </div>
-
-          {/* Items */}
-          <table className="w-full mb-8">
-            <thead><tr className="border-b-2 border-black text-left">
-              <th className="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Item Description</th>
-              <th className="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-16">Qty</th>
-              <th className="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right w-32">Amount</th>
-            </tr></thead>
-            <tbody className="divide-y divide-slate-200">
-              {items.length === 0 && !apt.type.includes("Paid Service") ? (
-                <tr>
-                  <td className="py-4"><p className="font-bold text-black">{apt.type.split(" — ")[0]} — Visiting Charge</p><p className="text-xs text-slate-500 mt-1">On-site service by {apt.tech}</p></td>
-                  <td className="py-4 text-center font-bold text-black">1</td>
-                  <td className="py-4 text-right font-bold text-black">₹{total.toLocaleString("en-IN")}</td>
-                </tr>
-              ) : (<>
-                <tr>
-                  <td className="py-4"><p className="font-bold text-black">{apt.type.split(" — ")[0]} — Visiting Charge</p><p className="text-xs text-slate-500 mt-1">On-site service by {apt.tech}</p></td>
-                  <td className="py-4 text-center font-bold text-black">1</td>
-                  <td className="py-4 text-right text-slate-400">{apt.type.includes("Paid Service") ? '₹299' : '—'}</td>
-                </tr>
-                {items.map((item, i) => (
-                  <tr key={i}>
-                    <td className="py-4 pl-4"><p className="font-medium text-black">{item.name}</p><p className="text-xs text-slate-500 mt-0.5">Part / Material</p></td>
-                    <td className="py-4 text-center text-slate-700 font-semibold">{item.qty}</td>
-                    <td className="py-4 text-right font-bold text-black">₹{(item.cost * item.qty).toLocaleString("en-IN")}</td>
-                  </tr>
-                ))}
-              </>)}
-            </tbody>
-          </table>
-
-          {/* Totals */}
-          <div className="flex justify-end mb-10">
-            <div className="w-full sm:w-72 flex flex-col gap-3">
-              <div className="flex justify-between text-sm text-slate-600 font-medium"><span>Subtotal</span><span className="font-bold text-black">₹{total.toLocaleString("en-IN")}</span></div>
-              <div className="flex justify-between text-sm text-slate-600 font-medium border-b border-slate-300 pb-3"><span>GST / Tax</span><span className="text-slate-500">Included</span></div>
-              <div className="flex justify-between text-lg font-black text-black pt-1"><span>Total</span><span>₹{total.toLocaleString("en-IN")}</span></div>
-              {apt.paymentStatus === "Paid" && <div className="flex justify-between text-sm text-black bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-lg"><span className="font-bold">Amount Paid</span><span className="font-black">₹{total.toLocaleString("en-IN")}</span></div>}
-              {apt.paymentStatus === "Unpaid" && <div className="flex justify-between text-sm text-rose-700 bg-rose-50 border border-rose-200 px-3 py-2 rounded-lg"><span className="font-bold">Balance Due</span><span className="font-black">₹{total.toLocaleString("en-IN")}</span></div>}
-              {apt.paymentStatus === "Free" && <div className="flex justify-between text-sm text-slate-600 bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg"><span className="font-bold">Warranty / Free Visit</span><span className="font-black">₹0</span></div>}
-            </div>
-          </div>
-
-          {apt.remarks && <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-8"><p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Technician Remarks</p><p className="text-sm text-slate-700 font-medium">{apt.remarks}</p></div>}
-
-          <div className="border-t border-slate-200 pt-8 text-center">
-            <p className="text-black font-bold">Thank you for choosing Sardar Ji RO!</p>
-            <p className="text-slate-500 font-medium text-xs mt-1">For queries, contact your nearest Sardar Ji RO service center.</p>
-          </div>
-        </div>
-      </div>
-    </div>
+    <UnifiedInvoiceModal
+      onClose={onClose}
+      invoiceType="SERVICE"
+      customerName={apt.customerName}
+      customerPhone={apt.customerPhone}
+      customerAddress={apt.address}
+      items={items}
+      subtotal={total}
+      received={received}
+      paymentMethod="Cash"
+      date={apt.completedAt || apt.date}
+    />
   );
 }
 

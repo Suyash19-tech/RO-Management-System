@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { UnifiedInvoiceModal } from "./UnifiedInvoiceModal";
+
 
 /* --------------- Types --------------- */
 type Amc = {
@@ -241,148 +243,32 @@ export function AmcInvoiceView({
   const [showPayModal, setShowPayModal] = useState(false);
   const total = (amc as any).totalAmount || getPlanPrice(amc.plan);
   const paid = (amc as any).amountPaid || 0;
-  const balance = (amc as any).balanceDue !== undefined ? (amc as any).balanceDue : (total - paid);
-  const invoiceNo = `INV-AMC-${amc.id.slice(-6).toUpperCase()}-${new Date(amc.startDate).getFullYear()}`;
-
-  const handlePrint = () => {
-    window.print();
-  };
+  const paymentMethod = (amc as any).paymentMethod || 'Cash';
+  const items = [
+    {
+      name: `Annual Maintenance Contract — ${amc.plan}`,
+      qty: 1,
+      unit: 'Pcs',
+      price: total,
+      amount: total
+    }
+  ];
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] overflow-y-auto p-4 sm:p-8">
-      {/* Styles for printing */}
-      <style dangerouslySetInnerHTML={{ __html: `@media print { @page { margin: 15mm; size: A4; } body * { visibility: hidden; } #amc-printable, #amc-printable * { visibility: visible; } #amc-printable { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; background: white !important; box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }` }} />
-      
-      <div className="w-full max-w-3xl mx-auto flex flex-col gap-4 my-2 sm:my-8">
-        
-        {/* Actions Row */}
-        <div className="flex justify-between items-center gap-3 no-print">
-          <div>
-            {balance > 0 && (
-              <button 
-                onClick={() => setShowPayModal(true)}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-lg flex items-center gap-2 transition-all active:scale-95"
-              >
-                <CheckCircle2 className="w-4 h-4" /> Collect Payment / Settle
-              </button>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={handlePrint}
-              className="px-5 py-2.5 bg-slate-950 hover:bg-slate-800 text-white text-sm font-bold rounded-xl shadow-lg flex items-center gap-2 transition-all active:scale-95"
-            >
-              <Download className="w-4 h-4" /> Save / Print
-            </button>
-            <button 
-              onClick={onClose}
-              className="p-2.5 bg-white hover:bg-slate-100 text-slate-600 rounded-xl shadow-lg transition-colors flex items-center justify-center shrink-0 border border-slate-200"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Invoice Body */}
-        <div id="amc-printable" className="bg-white w-full rounded-2xl shadow-2xl p-6 sm:p-12 border border-slate-200 shrink-0">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border-b border-slate-200 pb-8 mb-8">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight">SARDARJI RO</h1>
-              <p className="text-slate-600 mt-1 text-sm font-medium">Pure Water Solutions & AMC Experts</p>
-              <p className="text-slate-600 text-sm mt-1">Delhi NCR Region, India</p>
-              <p className="text-slate-600 text-sm font-medium mt-1">GSTIN: 07ABCDE1234F1Z5</p>
-            </div>
-            <div className="text-left sm:text-right w-full sm:w-auto">
-              <h2 className="text-3xl sm:text-4xl font-black text-slate-200 uppercase tracking-widest leading-none">Invoice</h2>
-              <p className="text-slate-900 font-bold mt-3">{invoiceNo}</p>
-              <p className="text-slate-600 font-medium text-sm mt-1">Date: {new Date(amc.startDate).toLocaleDateString("en-IN")}</p>
-              <div className="mt-3">
-                {balance <= 0 ? (
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full uppercase tracking-wider">Paid</span>
-                ) : (
-                  <span className="px-3 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full uppercase tracking-wider">Pending</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Bill To */}
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-10">
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Billed To</p>
-              <h3 className="text-lg font-bold text-black">{amc.customerName}</h3>
-              <p className="text-slate-600 font-medium text-sm mt-1">{amc.address}</p>
-              {amc.customerPhone && <p className="text-slate-600 font-medium text-sm mt-1">Ph: {amc.customerPhone}</p>}
-            </div>
-            <div className="text-left sm:text-right w-full sm:w-auto p-4 sm:p-0 bg-slate-50 sm:bg-transparent rounded-lg border border-slate-100 sm:border-0">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Contract Details</p>
-              <p className="text-slate-950 font-bold text-sm">{amc.plan}</p>
-              <p className="text-slate-600 font-medium text-sm mt-1">ID: {amc.id}</p>
-              <p className="text-slate-600 font-medium text-sm mt-1">Period: {formatDate(amc.startDate)} to {formatDate(amc.endDate)}</p>
-            </div>
-          </div>
-
-          {/* Items */}
-          <table className="w-full mb-8">
-            <thead>
-              <tr className="border-b-2 border-black text-left">
-                <th className="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Plan Description</th>
-                <th className="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-16">Qty</th>
-                <th className="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right w-32">Amount</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              <tr>
-                <td className="py-5">
-                  <p className="font-bold text-black">Annual Maintenance Contract — {amc.plan}</p>
-                  <p className="text-xs text-slate-500 mt-1">Comprehensive coverage including filter changes and support visits</p>
-                </td>
-                <td className="py-5 text-center font-bold text-black">1</td>
-                <td className="py-5 text-right font-bold text-black">₹{total.toLocaleString("en-IN")}</td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Totals */}
-          <div className="flex justify-end mb-10">
-            <div className="w-full sm:w-72 flex flex-col gap-3">
-              <div className="flex justify-between text-sm text-slate-600 font-medium">
-                <span>Subtotal</span>
-                <span className="font-bold text-black">₹{total.toLocaleString("en-IN")}</span>
-              </div>
-              <div className="flex justify-between text-sm text-slate-600 font-medium border-b border-slate-300 pb-3">
-                <span>GST / Tax (18%)</span>
-                <span className="text-slate-500">Included</span>
-              </div>
-              <div className="flex justify-between text-lg font-black text-black pt-1 border-b border-slate-200 pb-2">
-                <span>Total</span>
-                <span>₹{total.toLocaleString("en-IN")}</span>
-              </div>
-              <div className="flex justify-between text-sm text-blue-700 bg-blue-50 border border-blue-200 px-3 py-2 rounded-lg mt-1">
-                <span className="font-semibold">Amount Paid</span>
-                <span className="font-bold">₹{paid.toLocaleString("en-IN")}</span>
-              </div>
-              {balance > 0 ? (
-                <div className="flex justify-between text-sm text-rose-700 bg-rose-50 border border-rose-200 px-3 py-2 rounded-lg mt-1">
-                  <span className="font-semibold">Balance Due</span>
-                  <span className="font-bold">₹{balance.toLocaleString("en-IN")}</span>
-                </div>
-              ) : (
-                <div className="flex justify-between text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-lg mt-1">
-                  <span className="font-semibold">Setted / Paid in Full</span>
-                  <span className="font-bold">₹0</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="border-t border-slate-200 pt-8 text-center">
-            <p className="text-black font-bold">Thank you for choosing Sardar Ji RO!</p>
-            <p className="text-slate-500 font-medium text-xs mt-1">For support or queries, contact us at our nearest service center.</p>
-          </div>
-        </div>
-      </div>
+    <>
+      <UnifiedInvoiceModal
+        onClose={onClose}
+        invoiceType="AMC"
+        customerName={amc.customerName}
+        customerPhone={amc.customerPhone}
+        customerAddress={amc.address}
+        items={items}
+        subtotal={total}
+        received={paid}
+        paymentMethod={paymentMethod}
+        date={amc.startDate}
+        onCollectPayment={() => setShowPayModal(true)}
+      />
 
       {showPayModal && (
         <AmcPaymentModal 
@@ -393,7 +279,7 @@ export function AmcInvoiceView({
           }} 
         />
       )}
-    </div>
+    </>
   );
 }
 

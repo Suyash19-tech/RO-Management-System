@@ -7,6 +7,7 @@ import { ArrowLeft, Edit2, FileText, User, MapPin, Phone, Calendar, Shield, Sett
 import Link from "next/link";
 import { InvoiceView, type Appointment } from "@/components/dashboard/AppointmentsTable";
 import { AmcInvoiceView } from "@/components/dashboard/AMCTable";
+import { UnifiedInvoiceModal } from "@/components/dashboard/UnifiedInvoiceModal";
 
 type ProfileData = {
   id: string;
@@ -92,10 +93,6 @@ export default function CustomerProfilePage() {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   if (loading) {
@@ -484,138 +481,55 @@ export default function CustomerProfilePage() {
 
       {/* Professional Invoice Modal */}
       {invoiceInst && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 overflow-y-auto p-4 sm:p-8">
-          <div className="w-full max-w-3xl mx-auto flex flex-col gap-4 my-2 sm:my-8">
-            
-            {/* Modal Actions */}
-            <div className="flex justify-end gap-2 sm:gap-3 print:hidden">
-              <button 
-                onClick={handlePrint}
-                className="flex-1 sm:flex-none justify-center px-4 py-3.5 sm:py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-base sm:text-sm font-bold rounded-xl sm:rounded-lg shadow-lg flex items-center gap-2 transition-colors"
-              >
-                <Download className="w-5 h-5 sm:w-4 sm:h-4" /> Save as PDF / Print
-              </button>
-              <button 
-                onClick={() => setInvoiceInst(null)}
-                className="p-3.5 sm:p-2.5 bg-white hover:bg-slate-100 text-slate-600 rounded-xl sm:rounded-lg shadow-lg transition-colors flex items-center justify-center shrink-0"
-              >
-                <X className="w-6 h-6 sm:w-5 sm:h-5" />
-              </button>
-            </div>
-
-            {/* A4 Printable Invoice Surface */}
-            <div id="printable-invoice" className="bg-white w-full rounded-xl shadow-2xl p-5 sm:p-12 border border-slate-200 shrink-0 mx-auto">
-              
-              {/* Invoice Header */}
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border-b border-slate-200 pb-6 sm:pb-8 mb-6 sm:mb-8">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight">SARDARJI RO</h1>
-                  <p className="text-slate-600 mt-1 text-sm font-medium">Pure Water Solutions & AMC Experts</p>
-                  <p className="text-slate-600 text-sm mt-1">Delhi NCR Region, India</p>
-                  <p className="text-slate-600 text-sm font-medium mt-1">GSTIN: 07ABCDE1234F1Z5</p>
-                </div>
-                <div className="text-left sm:text-right w-full sm:w-auto">
-                  <h2 className="text-3xl sm:text-4xl font-black text-slate-200 uppercase tracking-widest">Invoice</h2>
-                  <p className="text-slate-900 font-bold mt-2">INV-{invoiceInst.id.substring(invoiceInst.id.length - 8).toUpperCase()}-{new Date(invoiceInst.date).getFullYear()}</p>
-                  <p className="text-slate-600 font-medium text-sm">Date: {new Date(invoiceInst.date).toLocaleDateString()}</p>
-                </div>
-              </div>
-
-              {/* Bill To Section */}
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-8 sm:mb-10">
-                <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Billed To</p>
-                  <h3 className="text-lg font-bold text-black">{profile.name}</h3>
-                  <p className="text-slate-600 font-medium text-sm mt-1">{profile.address}</p>
-                  <p className="text-slate-600 font-medium text-sm mt-0.5">Ph: {profile.phone}</p>
-                </div>
-                <div className="text-left sm:text-right w-full sm:w-auto p-4 sm:p-0 bg-slate-50 sm:bg-transparent rounded-lg border border-slate-100 sm:border-0">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Payment Details</p>
-                  <p className="text-slate-900 font-bold text-sm"><span className="text-slate-500 font-medium">Method:</span> {invoiceInst.paymentMethod}</p>
-                  <p className="text-slate-900 font-bold text-sm mt-0.5"><span className="text-slate-500 font-medium">Status:</span> {invoiceInst.amountDue > 0 ? 'Partial Payment' : 'Paid in Full'}</p>
-                </div>
-              </div>
-
-              {/* Line Items Table */}
-              <table className="w-full mb-8">
-                <thead>
-                  <tr className="border-b-2 border-black text-left">
-                    <th className="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Item Description</th>
-                    <th className="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right w-32">Amount</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  <tr>
-                    <td className="py-4">
-                      <p className="font-bold text-black">{invoiceInst.model}</p>
-                      <p className="text-xs font-medium text-slate-500 mt-1">Main RO Unit Installation</p>
-                    </td>
-                    <td className="py-4 text-right font-bold text-black">₹{invoiceInst.roPrice?.toLocaleString() || 0}</td>
-                  </tr>
-                  
-                  {invoiceInst.equipments && invoiceInst.equipments.length > 0 && invoiceInst.equipments !== "None" && (
-                    <tr>
-                      <td className="py-4">
-                        <p className="font-bold text-black">Extra Equipments / Spare Parts</p>
-                        <p className="text-xs font-medium text-slate-500 mt-1">{invoiceInst.equipments}</p>
-                      </td>
-                      <td className="py-4 text-right font-bold text-black">₹{invoiceInst.equipmentPrice?.toLocaleString() || 0}</td>
-                    </tr>
-                  )}
-
-                  {invoiceInst.amcPrice > 0 && (
-                    <tr>
-                      <td className="py-4">
-                        <p className="font-bold text-black">AMC / Service Contract</p>
-                        <p className="text-xs font-medium text-slate-500 mt-1">Includes {invoiceInst.servicesCount} scheduled visits</p>
-                      </td>
-                      <td className="py-4 text-right font-bold text-black">₹{invoiceInst.amcPrice?.toLocaleString() || 0}</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-
-              {/* Totals Section */}
-              <div className="flex justify-end mb-8 sm:mb-12">
-                <div className="w-full sm:w-72 flex flex-col gap-3">
-                  <div className="flex justify-between text-sm text-slate-600 font-medium">
-                    <span>Subtotal</span>
-                    <span className="font-bold text-black">₹{(invoiceInst.roPrice + invoiceInst.equipmentPrice + invoiceInst.amcPrice).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-slate-600 font-medium">
-                    <span>Discount</span>
-                    <span className="font-bold text-black">-₹{invoiceInst.discount?.toLocaleString() || 0}</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-slate-600 font-medium border-b border-slate-300 pb-3">
-                    <span>GST (18%)</span>
-                    <span className="font-bold text-black">₹{((invoiceInst.totalPrice) - ((invoiceInst.roPrice + invoiceInst.equipmentPrice + invoiceInst.amcPrice) - invoiceInst.discount)).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-black text-black pt-1">
-                    <span>Total</span>
-                    <span>₹{invoiceInst.totalPrice?.toLocaleString() || 0}</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-black bg-slate-100 border border-slate-200 px-3 py-2 rounded-lg mt-2">
-                    <span className="font-bold">Amount Paid</span>
-                    <span className="font-black">₹{invoiceInst.amountPaid?.toLocaleString() || 0}</span>
-                  </div>
-                  {invoiceInst.amountDue > 0 && (
-                    <div className="flex justify-between text-sm text-black bg-slate-100 border border-slate-200 px-3 py-2 rounded-lg">
-                      <span className="font-bold">Balance Due</span>
-                      <span className="font-black">₹{invoiceInst.amountDue?.toLocaleString()}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="border-t border-slate-200 pt-8 text-center">
-                <p className="text-black font-bold">Thank you for your business!</p>
-                <p className="text-slate-500 font-medium text-xs mt-1">If you have any questions about this invoice, please contact support.</p>
-              </div>
-
-            </div>
-          </div>
-        </div>
+        <UnifiedInvoiceModal
+          onClose={() => setInvoiceInst(null)}
+          invoiceType="INSTALLATION"
+          customerName={profile?.name || ""}
+          customerPhone={profile?.phone}
+          customerAddress={profile?.address || ""}
+          items={(() => {
+            const itemsList = [];
+            itemsList.push({
+              name: `${invoiceInst.model} — Main RO Unit Installation`,
+              qty: 1,
+              unit: 'Pcs',
+              price: invoiceInst.roPrice || 0,
+              amount: invoiceInst.roPrice || 0
+            });
+            if (invoiceInst.equipments && invoiceInst.equipments.length > 0 && invoiceInst.equipments !== "None") {
+              itemsList.push({
+                name: `Spare Parts: ${invoiceInst.equipments}`,
+                qty: 1,
+                unit: 'Pcs',
+                price: invoiceInst.equipmentPrice || 0,
+                amount: invoiceInst.equipmentPrice || 0
+              });
+            }
+            if (invoiceInst.amcPrice > 0) {
+              itemsList.push({
+                name: `AMC / Service Contract — ${invoiceInst.servicesCount} visits`,
+                qty: 1,
+                unit: 'Pcs',
+                price: invoiceInst.amcPrice || 0,
+                amount: invoiceInst.amcPrice || 0
+              });
+            }
+            if (invoiceInst.discount > 0) {
+              itemsList.push({
+                name: `Discount`,
+                qty: 1,
+                unit: 'Pcs',
+                price: -invoiceInst.discount,
+                amount: -invoiceInst.discount
+              });
+            }
+            return itemsList;
+          })()}
+          subtotal={(invoiceInst.roPrice || 0) + (invoiceInst.equipmentPrice || 0) + (invoiceInst.amcPrice || 0) - (invoiceInst.discount || 0)}
+          received={invoiceInst.amountPaid || 0}
+          paymentMethod={invoiceInst.paymentMethod || "Cash"}
+          date={invoiceInst.date}
+        />
       )}
 
       {invoiceApt && <InvoiceView apt={invoiceApt} onClose={() => setInvoiceApt(null)} />}
