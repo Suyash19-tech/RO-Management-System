@@ -25,6 +25,19 @@ export async function GET(request: Request, props: { params: Promise<{ phone: st
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     }
 
+    const now = new Date();
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(now.getFullYear() - 1);
+
+    const hasRecentInstallation = customer.installations.some(
+      (inst) => new Date(inst.date) >= oneYearAgo
+    );
+    const hasActiveAmc = customer.amcs.some(
+      (amc) => new Date(amc.endDate) > now && amc.status === 'Active'
+    );
+
+    customer.status = (hasRecentInstallation || hasActiveAmc) ? 'Active' : 'Inactive';
+
     return NextResponse.json(customer);
   } catch (error) {
     console.error('Failed to fetch customer:', error);
