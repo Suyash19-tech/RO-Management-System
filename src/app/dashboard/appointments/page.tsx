@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { AppointmentsTable } from "@/components/dashboard/AppointmentsTable";
+import { AppointmentsTable, InvoiceView } from "@/components/dashboard/AppointmentsTable";
 import { NewServiceModal } from "@/components/dashboard/NewServiceModal";
 import { useSWRConfig } from "swr";
 
 export default function AppointmentsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [invoiceApt, setInvoiceApt] = useState<any>(null);
   const { mutate } = useSWRConfig();
 
   return (
@@ -34,8 +35,20 @@ export default function AppointmentsPage() {
       <NewServiceModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={() => mutate('/api/appointments')}
+        onSuccess={(createdApt, shouldGenInvoice) => {
+          mutate('/api/appointments');
+          if (shouldGenInvoice && createdApt) {
+            setInvoiceApt(createdApt);
+          }
+        }}
       />
+
+      {invoiceApt && (
+        <InvoiceView 
+          apt={invoiceApt} 
+          onClose={() => setInvoiceApt(null)} 
+        />
+      )}
     </div>
   );
 }

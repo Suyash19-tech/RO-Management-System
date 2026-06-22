@@ -26,10 +26,11 @@ export function NewServiceModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (createdApt?: any, shouldGenInvoice?: boolean) => void;
 }) {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [generateInvoice, setGenerateInvoice] = useState(true);
 
   // Form State
   const [form, setForm] = useState({
@@ -80,8 +81,9 @@ export function NewServiceModal({
         throw new Error("Failed to create service onboarding");
       }
 
+      const createdApt = await res.json();
       toast.success("Customer onboarded successfully!");
-      onSuccess();
+      onSuccess(createdApt, generateInvoice);
       onClose();
     } catch (error) {
       console.error(error);
@@ -235,6 +237,18 @@ export function NewServiceModal({
                   rows={2}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-[#2563EB] outline-none resize-none transition-all"
                 />
+              </div>
+
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer hover:text-blue-600 transition-colors">
+                  <input 
+                    type="checkbox" 
+                    checked={generateInvoice} 
+                    onChange={e => setGenerateInvoice(e.target.checked)} 
+                    className="rounded text-blue-600 focus:ring-blue-500" 
+                  />
+                  Generate Invoice Immediately
+                </label>
               </div>
             </div>
           )}

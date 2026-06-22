@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
 import { Plus, Search, Filter, Download, X, Check, Server, Shield, Cog, Receipt, User as UserIcon, MapPin, IndianRupee, CreditCard, Banknote, Wallet, FileText, ChevronRight, ChevronLeft } from "lucide-react";
 import { InstallationsTable } from "@/components/dashboard/InstallationsTable";
+import { UnifiedInvoiceModal } from "@/components/dashboard/UnifiedInvoiceModal";
 
 type ProductOption = { name: string; price: number };
 
@@ -13,6 +14,7 @@ export default function InstallationsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentStep, setCurrentStep] = useState(1);
+  const [invoiceInst, setInvoiceInst] = useState<any>(null);
 
   // Dynamic Options from DB
   const [roOptions, setRoOptions] = useState<ProductOption[]>([]);
@@ -162,9 +164,10 @@ export default function InstallationsPage() {
       });
 
       if (!res.ok) throw new Error("Failed to onboard customer");
+      const data = await res.json();
 
       if (form.generateInvoice) {
-         console.log("Invoice Generation Triggered for:", form.name);
+         setInvoiceInst(data.installation);
          const paidAmt = form.amountPaid || grandTotal;
          const dueAmt = Math.max(0, grandTotal - paidAmt);
          const msg = dueAmt > 0
@@ -558,6 +561,57 @@ export default function InstallationsPage() {
         </div>
       )}
 
+      {invoiceInst && (
+        <UnifiedInvoiceModal
+          onClose={() => setInvoiceInst(null)}
+          invoiceType="INSTALLATION"
+          customerName={invoiceInst.customerName || ""}
+          customerPhone={invoiceInst.customerPhone}
+          customerAddress={invoiceInst.address || ""}
+          items={(() => {
+            const itemsList = [];
+            itemsList.push({
+              name: `${invoiceInst.model} — Main RO Unit Installation`,
+              qty: 1,
+              unit: 'Pcs',
+              price: invoiceInst.roPrice || 0,
+              amount: invoiceInst.roPrice || 0
+            });
+            if (invoiceInst.equipments && invoiceInst.equipments.length > 0 && invoiceInst.equipments !== "None") {
+              itemsList.push({
+                name: `Spare Parts: ${invoiceInst.equipments}`,
+                qty: 1,
+                unit: 'Pcs',
+                price: invoiceInst.equipmentPrice || 0,
+                amount: invoiceInst.equipmentPrice || 0
+              });
+            }
+            if (invoiceInst.amcPrice > 0) {
+              itemsList.push({
+                name: `AMC / Service Contract — ${invoiceInst.servicesCount} visits`,
+                qty: 1,
+                unit: 'Pcs',
+                price: invoiceInst.amcPrice || 0,
+                amount: invoiceInst.amcPrice || 0
+              });
+            }
+            if (invoiceInst.discount > 0) {
+              itemsList.push({
+                name: `Discount`,
+                qty: 1,
+                unit: 'Pcs',
+                price: -invoiceInst.discount,
+                amount: -invoiceInst.discount
+              });
+            }
+            return itemsList;
+          })()}
+          subtotal={(invoiceInst.roPrice || 0) + (invoiceInst.equipmentPrice || 0) + (invoiceInst.amcPrice || 0) - (invoiceInst.discount || 0)}
+          received={invoiceInst.amountPaid || 0}
+          paymentMethod={invoiceInst.paymentMethod || "Cash"}
+          date={invoiceInst.date}
+        />
+      )}
     </div>
   );
 }
