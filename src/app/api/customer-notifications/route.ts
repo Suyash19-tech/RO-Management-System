@@ -2,13 +2,6 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import webpush from 'web-push';
 
-// Configure Web Push with VAPID keys
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || 'mailto:support@sardarjiro.com',
-  process.env.VAPID_PUBLIC_KEY || '',
-  process.env.VAPID_PRIVATE_KEY || ''
-);
-
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
@@ -70,6 +63,13 @@ export async function POST(request: Request) {
     // Send native web push to all user's registered devices
     try {
       if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+        // Configure Web Push with VAPID keys
+        webpush.setVapidDetails(
+          process.env.VAPID_SUBJECT || 'mailto:support@sardarjiro.com',
+          process.env.VAPID_PUBLIC_KEY,
+          process.env.VAPID_PRIVATE_KEY
+        );
+
         const subscriptions = await prisma.pushSubscription.findMany({
           where: { customerPhone: phone }
         });
