@@ -12,8 +12,7 @@ export interface Notification {
 
 export const fetchNotifications = async (phone: string = "9876543210"): Promise<Notification[]> => {
   try {
-    const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3001';
-    const res = await fetch(`${adminUrl}/api/customer-notifications?phone=${phone}`);
+    const res = await fetch(`/admin-api/customer-notifications?phone=${phone}`);
     if (res.ok) {
       const data = await res.json();
       return data.map((n: any) => ({

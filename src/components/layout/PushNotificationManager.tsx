@@ -61,8 +61,7 @@ export default function PushNotificationManager() {
         }
 
         // Send to backend
-        const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3001';
-        await fetch(`${adminUrl}/api/push-subscribe`, {
+        await fetch(`/admin-api/push-subscribe`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
