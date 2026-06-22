@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import Script from "next/script";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const router = useRouter();
   const vantaRef = useRef<HTMLDivElement>(null);
   const [vantaEffect, setVantaEffect] = useState<any>(0);
+  const [threeLoaded, setThreeLoaded] = useState(false);
 
   useEffect(() => {
     let vantaEffectInstance: any = null;
@@ -87,6 +89,19 @@ export default function LoginPage() {
 
   return (
     <div ref={vantaRef} className="min-h-screen bg-gradient-to-br from-[#F8FAFC] to-[#E2E8F0] flex items-center justify-center p-4 relative overflow-hidden">
+      <Script
+        src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"
+        strategy="lazyOnload"
+        id="three-js"
+        onLoad={() => setThreeLoaded(true)}
+      />
+      {threeLoaded && (
+        <Script
+          src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js"
+          strategy="lazyOnload"
+          id="vanta-waves"
+        />
+      )}
       {/* Decorative blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-400/20 rounded-full blur-3xl pointer-events-none"></div>
