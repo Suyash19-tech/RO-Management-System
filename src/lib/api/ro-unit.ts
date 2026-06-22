@@ -47,6 +47,17 @@ export const fetchMyRODetails = async (): Promise<ROUnitDetails | null> => {
   if (!stored || stored === "null" || stored === "undefined") return null;
   let parsed; try { parsed = JSON.parse(stored); } catch(e) { return null; }
   if (!parsed) return null;
+
+  try {
+    const res = await fetch(`/admin-api/customers/${parsed.phone}`);
+    if (res.ok) {
+      const fresh = await res.json();
+      localStorage.setItem("customer_profile", JSON.stringify(fresh));
+      parsed = fresh;
+    }
+  } catch (e) {
+    // Fall back to localStorage data if network request fails
+  }
   
   const installation = parsed.installations?.[0];
   if (!installation) return null;
