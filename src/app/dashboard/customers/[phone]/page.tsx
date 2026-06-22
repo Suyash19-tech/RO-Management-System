@@ -484,6 +484,8 @@ export default function CustomerProfilePage() {
         <UnifiedInvoiceModal
           onClose={() => setInvoiceInst(null)}
           invoiceType="INSTALLATION"
+          recordId={invoiceInst.id}
+          onSaveSuccess={() => fetchProfile()}
           customerName={profile?.name || ""}
           customerPhone={profile?.phone}
           customerAddress={profile?.address || ""}

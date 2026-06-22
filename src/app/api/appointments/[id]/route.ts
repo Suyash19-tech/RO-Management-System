@@ -24,6 +24,10 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
           ...(data.date !== undefined && { date: new Date(data.date) }),
           ...(data.tech !== undefined && { tech: data.tech }),
           ...(data.status !== undefined && { status: data.status }),
+          ...(data.customerName !== undefined && { customerName: data.customerName }),
+          ...(data.customerPhone !== undefined && { customerPhone: data.customerPhone }),
+          ...(data.address !== undefined && { address: data.address }),
+          ...(data.type !== undefined && { type: data.type }),
           // Completion fields
           ...(data.remarks !== undefined && { remarks: data.remarks }),
           ...(data.itemsUsed !== undefined && { itemsUsed: data.itemsUsed }),

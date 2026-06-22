@@ -268,6 +268,8 @@ export function AmcInvoiceView({
         paymentMethod={paymentMethod}
         date={amc.startDate}
         onCollectPayment={() => setShowPayModal(true)}
+        recordId={amc.id}
+        onSaveSuccess={onUpdate}
       />
 
       {showPayModal && (

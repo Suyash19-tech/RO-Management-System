@@ -575,6 +575,8 @@ export default function InstallationsPage() {
         <UnifiedInvoiceModal
           onClose={() => setInvoiceInst(null)}
           invoiceType="INSTALLATION"
+          recordId={invoiceInst.id}
+          onSaveSuccess={() => setRefreshKey(prev => prev + 1)}
           customerName={invoiceInst.customerName || ""}
           customerPhone={invoiceInst.customerPhone}
           customerAddress={invoiceInst.address || ""}

@@ -70,7 +70,7 @@ function fmt(d?: string | null) {
 /* ═══════════════════════════════════════════════════
    PROFESSIONAL INVOICE
 ═══════════════════════════════════════════════════ */
-export function InvoiceView({ apt, onClose }: { apt: Appointment; onClose: () => void }) {
+export function InvoiceView({ apt, onClose, onUpdate }: { apt: Appointment; onClose: () => void; onUpdate?: () => void }) {
   const parsedItems: LineItem[] = (() => { try { return apt.itemsUsed ? JSON.parse(apt.itemsUsed) : []; } catch { return []; } })();
   const total = apt.costCharged ?? 0;
   
@@ -119,6 +119,8 @@ export function InvoiceView({ apt, onClose }: { apt: Appointment; onClose: () =>
       received={received}
       paymentMethod="Cash"
       date={apt.completedAt || apt.date}
+      recordId={apt.id}
+      onSaveSuccess={onUpdate}
     />
   );
 }
@@ -788,7 +790,7 @@ export function AppointmentsTable() {
       </div>
 
       {completionApt && <CompletionWizard apt={completionApt} onClose={() => setCompletionApt(null)} onDone={handleDone} onViewInvoice={setInvoiceApt} />}
-      {invoiceApt && <InvoiceView apt={invoiceApt} onClose={() => setInvoiceApt(null)} />}
+      {invoiceApt && <InvoiceView apt={invoiceApt} onClose={() => setInvoiceApt(null)} onUpdate={mutateAppointments} />}
     </div>
   );
 }

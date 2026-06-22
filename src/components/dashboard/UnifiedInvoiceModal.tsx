@@ -23,6 +23,8 @@ interface UnifiedInvoiceProps {
   date?: string | Date;
   onCollectPayment?: () => void;
   defaultGstEnabled?: boolean;
+  recordId?: string;
+  onSaveSuccess?: () => void;
 }
 
 // Convert numbers to words (Indian Rupee style)
@@ -62,8 +64,15 @@ export function UnifiedInvoiceModal({
   paymentMethod,
   date,
   onCollectPayment,
-  defaultGstEnabled = false
+  defaultGstEnabled = false,
+  recordId,
+  onSaveSuccess
 }: UnifiedInvoiceProps) {
+  // 0. Customer Info State (Editable)
+  const [custName, setCustName] = useState(customerName);
+  const [custPhone, setCustPhone] = useState(customerPhone || "");
+  const [custAddress, setCustAddress] = useState(customerAddress);
+
   // 1. Business & Header Info State (Defaulting to Amar Enterprises & traditional formats)
   const [businessName, setBusinessName] = useState("Aman Enterprises");
   const [businessAddress, setBusinessAddress] = useState("7/50 Quaters Near Power House Birla Nagar Hazira");
@@ -121,6 +130,87 @@ export function UnifiedInvoiceModal({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSavePermanentChanges = async () => {
+    setIsSaving(true);
+    try {
+      const payload: any = {};
+      
+      if (invoiceType === 'INSTALLATION' && recordId) {
+        payload.customerName = custName;
+        payload.customerPhone = custPhone;
+        payload.address = custAddress;
+        payload.amountPaid = amountReceived;
+        payload.totalPrice = grandTotal;
+        payload.amountDue = balance;
+        payload.paymentMethod = paymentMode;
+        
+        const res = await fetch(`/api/installations/${recordId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("Failed to update installation");
+      }
+      
+      else if (invoiceType === 'AMC' && recordId) {
+        payload.customerName = custName;
+        payload.customerPhone = custPhone;
+        payload.address = custAddress;
+        payload.amountPaid = amountReceived;
+        payload.totalAmount = grandTotal;
+        payload.balanceDue = balance;
+        payload.payment = balance <= 0 ? 'Paid' : 'Pending';
+        
+        const res = await fetch(`/api/amc/${recordId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("Failed to update AMC");
+      }
+      
+      else if (invoiceType === 'SERVICE' && recordId) {
+        payload.customerName = custName;
+        payload.customerPhone = custPhone;
+        payload.address = custAddress;
+        payload.costCharged = grandTotal;
+        payload.paymentStatus = amountReceived >= grandTotal ? 'Paid' : 'Unpaid';
+        
+        const res = await fetch(`/api/appointments/${recordId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("Failed to update appointment");
+      }
+
+      // Also update Customer profile directly if phone exists
+      if (custPhone) {
+        const res = await fetch(`/api/customers/${encodeURIComponent(custPhone)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: custName,
+            address: custAddress,
+          })
+        });
+        if (!res.ok) console.error("Failed to sync customer profile record");
+      }
+
+      toast.success("Changes saved permanently!");
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to save changes.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Dynamic logo parts
@@ -205,6 +295,24 @@ export function UnifiedInvoiceModal({
                 <div>
                   <label className="block text-slate-500 font-bold mb-1">State & State Code</label>
                   <input type="text" value={businessState} onChange={e => setBusinessState(e.target.value)} className="w-full px-2 py-1.5 border border-slate-200 rounded-md focus:border-blue-500 outline-none" />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest border-b border-slate-150 pb-2 mb-3">1.5 Customer (Bill To)</h4>
+              <div className="space-y-2 text-xs">
+                <div>
+                  <label className="block text-slate-500 font-bold mb-1">Customer Name</label>
+                  <input type="text" value={custName} onChange={e => setCustName(e.target.value)} className="w-full px-2 py-1.5 border border-slate-200 rounded-md focus:border-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-slate-500 font-bold mb-1">Mobile Number</label>
+                  <input type="text" value={custPhone} onChange={e => setCustPhone(e.target.value)} className="w-full px-2 py-1.5 border border-slate-200 rounded-md focus:border-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-slate-500 font-bold mb-1">Address</label>
+                  <textarea rows={2} value={custAddress} onChange={e => setCustAddress(e.target.value)} className="w-full px-2 py-1.5 border border-slate-200 rounded-md focus:border-blue-500 outline-none resize-none" />
                 </div>
               </div>
             </div>
@@ -318,6 +426,19 @@ export function UnifiedInvoiceModal({
                 )}
               </div>
             </div>
+
+            {recordId && (
+              <div className="pt-4 border-t border-slate-200 shrink-0">
+                <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest border-b border-slate-150 pb-2 mb-3">4. Save Changes</h4>
+                <button 
+                  onClick={handleSavePermanentChanges}
+                  disabled={isSaving}
+                  className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-lg transition-all active:scale-95 shadow-md flex items-center justify-center gap-1.5 uppercase font-bold"
+                >
+                  {isSaving ? "Saving Changes..." : "Save Bill Changes"}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Right Side - Invoice Preview Box */}
@@ -400,9 +521,9 @@ export function UnifiedInvoiceModal({
                 {/* Bill To Section */}
                 <div className="border border-t-0 border-black p-3 bg-slate-50/30">
                   <span className="text-[9px] text-slate-500 uppercase tracking-widest block font-bold mb-1">Bill To</span>
-                  <h3 className="text-xs font-bold text-black uppercase tracking-wide leading-none">{customerName}</h3>
-                  <p className="mt-1.5 text-black font-semibold text-xs leading-normal">{customerAddress}</p>
-                  {customerPhone && <p className="mt-1 text-slate-600 font-semibold">Ph: {customerPhone}</p>}
+                  <h3 className="text-xs font-bold text-black uppercase tracking-wide leading-none">{custName}</h3>
+                  <p className="mt-1.5 text-black font-semibold text-xs leading-normal">{custAddress}</p>
+                  {custPhone && <p className="mt-1 text-slate-600 font-semibold">Ph: {custPhone}</p>}
                 </div>
 
                 {/* Line Items Table */}
