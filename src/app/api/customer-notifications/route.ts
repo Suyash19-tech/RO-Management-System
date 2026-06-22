@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import webpush from 'web-push';
+
+// Configure Web Push with VAPID keys
+webpush.setVapidDetails(
+  process.env.VAPID_SUBJECT || 'mailto:support@sardarjiro.com',
+  process.env.VAPID_PUBLIC_KEY || '',
+  process.env.VAPID_PRIVATE_KEY || ''
+);
 
 export const dynamic = 'force-dynamic';
 
@@ -58,6 +66,43 @@ export async function POST(request: Request) {
         message
       }
     });
+
+    // Send native web push to all user's registered devices
+    try {
+      if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+        const subscriptions = await prisma.pushSubscription.findMany({
+          where: { customerPhone: phone }
+        });
+
+        const payload = JSON.stringify({
+          title: title,
+          body: message,
+          icon: '/icon-192x192.png',
+          badge: '/icon-192x192.png',
+          url: '/'
+        });
+
+        const pushPromises = subscriptions.map(sub => 
+          webpush.sendNotification(
+            {
+              endpoint: sub.endpoint,
+              keys: { p256dh: sub.p256dh, auth: sub.auth }
+            }, 
+            payload
+          ).catch(e => {
+            console.error('Failed to send push to one device (might be unsubscribed):', e);
+            if (e.statusCode === 410 || e.statusCode === 404) {
+              return prisma.pushSubscription.delete({ where: { id: sub.id } });
+            }
+          })
+        );
+        
+        await Promise.all(pushPromises);
+      }
+    } catch (pushError) {
+      console.error('Global push error:', pushError);
+      // We don't fail the API request if push fails, it's a progressive enhancement
+    }
 
     return NextResponse.json(notification, { status: 201, headers: { 'Access-Control-Allow-Origin': '*' } });
   } catch (error: any) {

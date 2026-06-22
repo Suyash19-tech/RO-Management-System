@@ -45,7 +45,7 @@ export default function InstallationsPage() {
     selectedEquipments: [] as ProductOption[],
     amcPlanName: "",
     amcPrice: 0,
-    servicesCount: 2,
+    servicesCount: 4,
     expiryDate: "",
     // Billing State
     discount: 0,
@@ -69,7 +69,7 @@ export default function InstallationsPage() {
   const handleAmcSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = amcOptions.find(amc => amc.name === e.target.value);
     if (!selected) {
-      setForm(prev => ({ ...prev, amcPlanName: "", amcPrice: 0, expiryDate: "", servicesCount: 2 }));
+      setForm(prev => ({ ...prev, amcPlanName: "", amcPrice: 0, expiryDate: "", servicesCount: 4 }));
       return;
     }
     
@@ -78,7 +78,7 @@ export default function InstallationsPage() {
     nextYear.setFullYear(nextYear.getFullYear() + 1);
     const dateString = nextYear.toISOString().split('T')[0];
 
-    let sCount = 2;
+    let sCount = 4;
     if (selected.name.includes("Premium") || selected.name.includes("2-Year")) sCount = 4;
 
     setForm(prev => ({ 
@@ -181,7 +181,7 @@ export default function InstallationsPage() {
         modelName: "", modelPrice: 0,
         selectedEquipments: [],
         amcPlanName: "", amcPrice: 0,
-        servicesCount: 2, expiryDate: "",
+        servicesCount: 4, expiryDate: "",
         discount: 0, paymentMethod: "Cash", amountPaid: 0, generateInvoice: true
       });
       setIsModalOpen(false);

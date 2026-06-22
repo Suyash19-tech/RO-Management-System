@@ -25,6 +25,7 @@ model Customer {
   amcs          Amc[]
   appointments  Appointment[]
   installations Installation[]
+  pushSubscriptions PushSubscription[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -181,4 +182,17 @@ model CustomerNotification {
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  
+  customerPhone String
+  customer      Customer @relation(fields: [customerPhone], references: [phone], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

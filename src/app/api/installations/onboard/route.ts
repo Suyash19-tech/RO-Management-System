@@ -61,7 +61,7 @@ export async function POST(request: Request) {
           address: customer.address,
           model,
           equipments: equipments || null,
-          servicesCount: servicesCount || 2,
+          servicesCount: servicesCount || 4,
           expiryDate: expiryDate ? new Date(expiryDate) : null,
           roPrice: Number(roPrice) || 0,
           equipmentPrice: Number(equipmentPrice) || 0,
