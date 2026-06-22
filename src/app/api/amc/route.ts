@@ -11,7 +11,7 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // If filtering by "No AMC" or "All", we should calculate people who have >1 year installations and NO active AMC
+    // If filtering by "No AMC" or "All", we should calculate people who have NO active AMC
     let noAmcDues: any[] = [];
     if (statusFilter === 'All' || statusFilter === 'No AMC') {
       const customers = await prisma.customer.findMany({
@@ -22,26 +22,24 @@ export async function GET(request: Request) {
       });
 
       const now = new Date();
-      const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
 
       customers.forEach(customer => {
-        if (customer.installations.length === 0) return;
-        const primaryInstall = customer.installations[0];
-        const installDate = primaryInstall.date;
-        const timeSinceInstall = now.getTime() - installDate.getTime();
-        
         const hasActiveAmc = customer.amcs.some(amc => amc.endDate > now && amc.status === 'Active');
 
         // Show everyone who doesn't have an active AMC
         if (!hasActiveAmc) {
+          const baseDate = customer.installations.length > 0 
+            ? customer.installations[0].date 
+            : (customer.joinDate || customer.createdAt || now);
+          
           noAmcDues.push({
             id: `NO-AMC-${customer.id.substring(0, 8)}`, // Fake ID for the table
             customerName: customer.name,
             customerPhone: customer.phone,
             address: customer.address,
             plan: 'None',
-            startDate: primaryInstall.date,
-            endDate: primaryInstall.date,
+            startDate: baseDate,
+            endDate: baseDate,
             status: 'No AMC',
             payment: 'Pending'
           });

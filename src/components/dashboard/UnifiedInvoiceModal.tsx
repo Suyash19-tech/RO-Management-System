@@ -122,9 +122,7 @@ export function UnifiedInvoiceModal({
   };
 
   // Dynamic logo parts
-  const nameParts = businessName.split(" ");
-  const logoFirst = nameParts[0] || "";
-  const logoSecond = nameParts.slice(1).join(" ") || "";
+  // Removed per user request
 
   return (
     <div className="fixed inset-0 z-[150] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-0 md:p-4 overflow-y-auto">
@@ -337,11 +335,7 @@ export function UnifiedInvoiceModal({
                   
                   {/* Left Column: Business details */}
                   <div className="col-span-7 p-3 border-r border-black flex items-start gap-3">
-                    {/* Tiny visual representation of a clean logo as seen in user upload */}
-                    <div className="w-12 h-12 bg-slate-50 border border-slate-300 rounded flex flex-col items-center justify-center p-1 font-sans shrink-0">
-                      <div className="text-[7px] font-black text-[#1E3A8A] leading-tight text-center">{logoFirst}</div>
-                      <div className="text-[5px] text-slate-400 font-bold tracking-tight text-center">{logoSecond}</div>
-                    </div>
+                    {/* Business Name and Address details */}
                     <div className="leading-normal">
                       <h2 className="text-[13px] font-bold text-black uppercase tracking-wide leading-tight">{businessName}</h2>
                       <p className="mt-1 text-black font-semibold">{businessAddress}</p>
