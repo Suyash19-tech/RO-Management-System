@@ -116,7 +116,9 @@ export default function InstallationsPage() {
         toast.error("Please select an RO Machine before proceeding.");
         return;
       }
-      // Auto-fill amount paid to total if moving to step 3 initially
+    }
+    if (currentStep === 3) {
+      // Auto-fill amount paid to total if moving to step 4 initially
       if (form.amountPaid === 0 && grandTotal > 0) {
          setForm(prev => ({ ...prev, amountPaid: grandTotal }));
       }
@@ -297,7 +299,8 @@ export default function InstallationsPage() {
                 {[
                   { num: 1, label: "Profile" },
                   { num: 2, label: "Hardware" },
-                  { num: 3, label: "Checkout" }
+                  { num: 3, label: "Confirmation" },
+                  { num: 4, label: "Checkout" }
                 ].map((step, index) => (
                   <div key={step.num} className="relative z-10 flex flex-col items-center flex-1">
                     
@@ -429,97 +432,106 @@ export default function InstallationsPage() {
                     </div>
                   </div>
 
-                  {/* Confirm Items & Prices Ledger */}
-                  {(form.modelName || form.selectedEquipments.length > 0 || form.amcPlanName) && (
-                    <div className="flex flex-col gap-4 border-t border-slate-100 pt-5 animate-in fade-in-50 duration-200">
-                      <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                        <Receipt className="w-4 h-4 text-emerald-650" />
-                        <h4 className="text-[11px] font-extrabold text-slate-900 uppercase tracking-widest">Confirm Items & Prices</h4>
-                      </div>
-                      
-                      <div className="bg-slate-50/50 border border-slate-200 rounded-xl overflow-hidden text-xs">
-                        <table className="w-full text-left border-collapse">
-                          <thead>
-                            <tr className="bg-slate-100 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                              <th className="py-2.5 px-4 font-bold">Item Description</th>
-                              <th className="py-2.5 px-4 font-bold text-right w-36">Price (₹)</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-200">
-                            {form.modelName && (
-                              <tr className="bg-white">
-                                <td className="py-3 px-4 font-bold text-slate-800 uppercase">
-                                  {form.modelName} <span className="text-[10px] text-slate-400 block font-normal normal-case mt-0.5">RO Machine</span>
-                                </td>
-                                <td className="py-2 px-4">
-                                  <div className="relative">
-                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
-                                    <input 
-                                      type="number"
-                                      value={form.modelPrice || ""}
-                                      onChange={(e) => setForm(prev => ({ ...prev, modelPrice: Number(e.target.value) }))}
-                                      className="w-full pl-6 pr-2 py-1.5 font-bold text-right border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 bg-white"
-                                    />
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                            
-                            {form.selectedEquipments.map((eq, idx) => (
-                              <tr key={eq.name} className="bg-white">
-                                <td className="py-3 px-4 font-bold text-slate-800">
-                                  {eq.name} <span className="text-[10px] text-slate-400 block font-normal mt-0.5">Extra Equipment / Part</span>
-                                </td>
-                                <td className="py-2 px-4">
-                                  <div className="relative">
-                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
-                                    <input 
-                                      type="number"
-                                      value={eq.price || ""}
-                                      onChange={(e) => {
-                                        const newPrice = Number(e.target.value);
-                                        setForm(prev => ({
-                                          ...prev,
-                                          selectedEquipments: prev.selectedEquipments.map((item, i) => 
-                                            i === idx ? { ...item, price: newPrice } : item
-                                          )
-                                        }));
-                                      }}
-                                      className="w-full pl-6 pr-2 py-1.5 font-bold text-right border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 bg-white"
-                                    />
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-
-                            {form.amcPlanName && (
-                              <tr className="bg-white">
-                                <td className="py-3 px-4 font-bold text-slate-800">
-                                  {form.amcPlanName} <span className="text-[10px] text-slate-400 block font-normal mt-0.5">AMC Service Plan</span>
-                                </td>
-                                <td className="py-2 px-4">
-                                  <div className="relative">
-                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
-                                    <input 
-                                      type="number"
-                                      value={form.amcPrice || ""}
-                                      onChange={(e) => setForm(prev => ({ ...prev, amcPrice: Number(e.target.value) }))}
-                                      className="w-full pl-6 pr-2 py-1.5 font-bold text-right border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 bg-white"
-                                    />
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
-              {/* STEP 3: BILLING & CHECKOUT */}
+              {/* STEP 3: CONFIRMATION LEDGER */}
               {currentStep === 3 && (
+                <div className="flex flex-col gap-6 animate-in slide-in-from-right-4 duration-300">
+                  <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <Receipt className="w-5 h-5 text-blue-600" />
+                    <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-widest">Phase 3: Confirm Items & Prices</h3>
+                  </div>
+
+                  <div className="bg-slate-50/50 border border-slate-200 rounded-2xl overflow-hidden text-xs shadow-sm">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-100 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          <th className="py-3 px-5 font-bold">Item Description</th>
+                          <th className="py-3 px-5 font-bold text-right w-44">Price (₹)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {form.modelName && (
+                          <tr className="bg-white">
+                            <td className="py-4 px-5 font-bold text-slate-800 uppercase">
+                              {form.modelName} <span className="text-[10px] text-slate-400 block font-normal normal-case mt-1">RO Machine</span>
+                            </td>
+                            <td className="py-3 px-5">
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
+                                <input 
+                                  type="number"
+                                  value={form.modelPrice || ""}
+                                  onChange={(e) => setForm(prev => ({ ...prev, modelPrice: Number(e.target.value) }))}
+                                  className="w-full pl-7 pr-3 py-2.5 font-bold text-right border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 bg-white text-sm"
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        
+                        {form.selectedEquipments.map((eq, idx) => (
+                          <tr key={eq.name} className="bg-white">
+                            <td className="py-4 px-5 font-bold text-slate-800">
+                              {eq.name} <span className="text-[10px] text-slate-400 block font-normal mt-1">Extra Equipment / Part</span>
+                            </td>
+                            <td className="py-3 px-5">
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
+                                <input 
+                                  type="number"
+                                  value={eq.price || ""}
+                                  onChange={(e) => {
+                                    const newPrice = Number(e.target.value);
+                                    setForm(prev => ({
+                                      ...prev,
+                                      selectedEquipments: prev.selectedEquipments.map((item, i) => 
+                                        i === idx ? { ...item, price: newPrice } : item
+                                      )
+                                    }));
+                                  }}
+                                  className="w-full pl-7 pr-3 py-2.5 font-bold text-right border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 bg-white text-sm"
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+
+                        {form.amcPlanName && (
+                          <tr className="bg-white">
+                            <td className="py-4 px-5 font-bold text-slate-800">
+                              {form.amcPlanName} <span className="text-[10px] text-slate-400 block font-normal mt-1">AMC Service Plan</span>
+                            </td>
+                            <td className="py-3 px-5">
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
+                                <input 
+                                  type="number"
+                                  value={form.amcPrice || ""}
+                                  onChange={(e) => setForm(prev => ({ ...prev, amcPrice: Number(e.target.value) }))}
+                                  className="w-full pl-7 pr-3 py-2.5 font-bold text-right border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 bg-white text-sm"
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+
+                        {!form.modelName && form.selectedEquipments.length === 0 && !form.amcPlanName && (
+                          <tr className="bg-white">
+                            <td colSpan={2} className="py-8 px-5 text-center text-slate-400 font-medium">
+                              No items selected. Please go back to select hardware or service plans.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 4: BILLING & CHECKOUT */}
+              {currentStep === 4 && (
                 <div className="flex flex-col gap-6 animate-in slide-in-from-right-4 duration-300">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                     <div className="flex items-center gap-2">
@@ -634,7 +646,7 @@ export default function InstallationsPage() {
                 <div /> // Spacer
               )}
 
-              {currentStep < 3 ? (
+              {currentStep < 4 ? (
                 <button 
                   type="button" 
                   onClick={nextStep}
