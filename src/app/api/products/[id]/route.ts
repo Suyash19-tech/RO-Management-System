@@ -42,19 +42,24 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-// PATCH — for stock adjustments only
+// PATCH — for stock adjustments and quick updates
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const { stock } = await request.json();
+    const data = await request.json();
     const product = await prisma.product.update({
       where: { id },
-      data: { stock: Math.max(0, Math.round(Number(stock) || 0)) },
+      data: {
+        ...(data.stock !== undefined && { stock: Math.max(0, Math.round(Number(data.stock) || 0)) }),
+        ...(data.price !== undefined && { price: Math.max(0, Number(data.price) || 0) }),
+        ...(data.threshold !== undefined && { threshold: Math.max(0, Math.round(Number(data.threshold) || 0)) }),
+        ...(data.purchasePrice !== undefined && { purchasePrice: Math.max(0, Number(data.purchasePrice) || 0) }),
+      },
     });
     return NextResponse.json(product);
   } catch (error) {
-    console.error('Failed to adjust stock:', error);
-    return NextResponse.json({ error: 'Failed to adjust stock' }, { status: 500 });
+    console.error('Failed to adjust stock/product:', error);
+    return NextResponse.json({ error: 'Failed to adjust stock/product' }, { status: 500 });
   }
 }
 

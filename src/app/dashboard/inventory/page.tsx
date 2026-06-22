@@ -89,11 +89,19 @@ function StockAdjustModal({ product, onClose, onUpdated }: {
   onUpdated: () => void;
 }) {
   const [newStock, setNewStock] = useState(product.stock);
+  const [price, setPrice] = useState(product.price);
+  const [purchasePrice, setPurchasePrice] = useState(product.purchasePrice);
+  const [threshold, setThreshold] = useState(product.threshold);
   const [step, setStep] = useState<"edit" | "confirm">("edit");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const diff = newStock - product.stock;
+  const hasChanged =
+    newStock !== product.stock ||
+    price !== product.price ||
+    purchasePrice !== product.purchasePrice ||
+    threshold !== product.threshold;
 
   const handleConfirm = async () => {
     setSaving(true);
@@ -102,9 +110,14 @@ function StockAdjustModal({ product, onClose, onUpdated }: {
       const res = await fetch(`/api/products/${product.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stock: newStock }),
+        body: JSON.stringify({
+          stock: newStock,
+          price: Number(price),
+          purchasePrice: Number(purchasePrice),
+          threshold: Math.round(Number(threshold)),
+        }),
       });
-      if (!res.ok) throw new Error("Failed to update stock");
+      if (!res.ok) throw new Error("Failed to update product details");
       onUpdated();
       onClose();
     } catch {
@@ -117,20 +130,20 @@ function StockAdjustModal({ product, onClose, onUpdated }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backdropFilter: "blur(6px)", background: "rgba(15,23,42,0.5)" }}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-100">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100">
 
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-50 to-white">
           <div>
-            <h2 className="text-base font-black text-slate-900">Adjust Stock</h2>
-            <p className="text-xs font-medium text-slate-400 mt-0.5 truncate max-w-[220px]">{product.name}</p>
+            <h2 className="text-base font-black text-slate-900">Adjust Stock & Pricing</h2>
+            <p className="text-xs font-medium text-slate-400 mt-0.5 truncate max-w-[320px]">{product.name}</p>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
           {step === "edit" ? (
             <>
               {/* Current stock display */}
@@ -148,23 +161,23 @@ function StockAdjustModal({ product, onClose, onUpdated }: {
                   <button
                     type="button"
                     onClick={() => setNewStock(Math.max(0, newStock - 1))}
-                    className="w-16 h-16 rounded-2xl bg-slate-100 hover:bg-rose-100 hover:text-rose-600 text-slate-600 flex items-center justify-center transition-all shadow-sm active:scale-95 font-bold"
+                    className="w-14 h-14 rounded-2xl bg-slate-100 hover:bg-rose-100 hover:text-rose-600 text-slate-600 flex items-center justify-center transition-all shadow-sm active:scale-95 font-bold"
                   >
-                    <Minus className="w-7 h-7" />
+                    <Minus className="w-6 h-6" />
                   </button>
                   <input
                     type="number"
                     min={0}
                     value={newStock}
                     onChange={e => setNewStock(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-28 text-center px-4 py-3 border border-slate-200 rounded-2xl text-3xl font-black text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all bg-slate-50 focus:bg-white"
+                    className="w-24 text-center px-3 py-2 border border-slate-200 rounded-2xl text-2xl font-black text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all bg-slate-50 focus:bg-white"
                   />
                   <button
                     type="button"
                     onClick={() => setNewStock(newStock + 1)}
-                    className="w-16 h-16 rounded-2xl bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600 text-slate-600 flex items-center justify-center transition-all shadow-sm active:scale-95 font-bold"
+                    className="w-14 h-14 rounded-2xl bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600 text-slate-600 flex items-center justify-center transition-all shadow-sm active:scale-95 font-bold"
                   >
-                    <Plus className="w-7 h-7" />
+                    <Plus className="w-6 h-6" />
                   </button>
                 </div>
 
@@ -181,6 +194,53 @@ function StockAdjustModal({ product, onClose, onUpdated }: {
                 )}
               </div>
 
+              {/* Pricing & Alert Threshold quick updates */}
+              <div className="border-t border-slate-100 pt-4 space-y-4">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Pricing & Alert Threshold
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                      Purchase Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={purchasePrice}
+                      onChange={e => setPurchasePrice(Math.max(0, parseFloat(e.target.value) || 0))}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all bg-slate-50 focus:bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                      Selling Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={price}
+                      onChange={e => setPrice(Math.max(0, parseFloat(e.target.value) || 0))}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all bg-slate-50 focus:bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                    Low Stock Threshold (units)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={threshold}
+                    onChange={e => setThreshold(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all bg-slate-50 focus:bg-white"
+                  />
+                </div>
+              </div>
+
               {error && (
                 <div className="px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-sm font-semibold">
                   {error}
@@ -194,7 +254,7 @@ function StockAdjustModal({ product, onClose, onUpdated }: {
                 </button>
                 <button
                   onClick={() => setStep("confirm")}
-                  disabled={newStock === product.stock}
+                  disabled={!hasChanged}
                   className="flex-1 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 rounded-xl transition-colors shadow-md shadow-blue-500/20"
                 >
                   Review & Apply
@@ -206,29 +266,49 @@ function StockAdjustModal({ product, onClose, onUpdated }: {
               {/* Confirmation Step */}
               <div className="bg-slate-50 rounded-xl border border-slate-100 p-4 space-y-3">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Summary of Changes</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold text-slate-600">Product</span>
-                  <span className="text-sm font-bold text-slate-900">{product.name}</span>
+                <div className="flex justify-between items-center border-b border-slate-150 pb-2">
+                  <span className="text-xs font-semibold text-slate-500">Product</span>
+                  <span className="text-xs font-black text-slate-900 truncate max-w-[240px]">{product.name}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold text-slate-600">Before</span>
-                  <span className="text-sm font-bold text-slate-700">{product.stock} units</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold text-slate-600">After</span>
-                  <span className={`text-sm font-black ${newStock < product.stock ? "text-rose-600" : "text-emerald-600"}`}>
-                    {newStock} units
-                  </span>
-                </div>
-                <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
-                  <span className="text-sm font-semibold text-slate-500">Change</span>
-                  <span className={`text-base font-black ${diff > 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                    {diff > 0 ? "+" : ""}{diff} units
-                  </span>
-                </div>
+
+                {newStock !== product.stock && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-semibold text-slate-600">Stock</span>
+                    <span className={`font-black ${diff > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                      {product.stock} → {newStock} ({diff > 0 ? "+" : ""}{diff})
+                    </span>
+                  </div>
+                )}
+
+                {purchasePrice !== product.purchasePrice && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-semibold text-slate-600">Purchase Price</span>
+                    <span className="font-black text-slate-900">
+                      ₹{product.purchasePrice.toLocaleString("en-IN")} → ₹{purchasePrice.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                )}
+
+                {price !== product.price && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-semibold text-slate-600">Selling Price</span>
+                    <span className="font-black text-slate-900">
+                      ₹{product.price.toLocaleString("en-IN")} → ₹{price.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                )}
+
+                {threshold !== product.threshold && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-semibold text-slate-600">Low Stock Alert</span>
+                    <span className="font-black text-slate-900">
+                      below {product.threshold ?? 5} → below {threshold} units
+                    </span>
+                  </div>
+                )}
               </div>
               <p className="text-xs text-center font-semibold text-slate-500">
-                Are you sure? This will update stock across the entire application.
+                Are you sure? This will update product fields across the entire application.
               </p>
               <div className="flex gap-3">
                 <button onClick={() => setStep("edit")}
