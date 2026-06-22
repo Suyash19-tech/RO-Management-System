@@ -48,7 +48,7 @@ export default function PushNotificationManager() {
         let subscription = await registration.pushManager.getSubscription();
         
         if (!subscription) {
-          const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+          const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "BPi4mtpJ4qpMIdAzkhmdM0dBVWyJWCU9Xn64MnrWAPSoykalBJ2kCn6g2WbFS0ocBxlCbtIq1Do-uMKadItOBc0";
           if (!publicVapidKey) {
             console.error('VAPID public key not found');
             return;
