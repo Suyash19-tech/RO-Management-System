@@ -60,7 +60,8 @@ export function CustomerNotifications() {
             if (parsed.phone) phone = parsed.phone;
           }
         }
-        const res = await fetch(`http://localhost:3001/api/customer-notifications?phone=${phone}`);
+        const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3001';
+        const res = await fetch(`${adminUrl}/api/customer-notifications?phone=${phone}`);
         if (res.ok) {
           const data = await res.json();
           realNotifs = data.map((n: any) => ({
