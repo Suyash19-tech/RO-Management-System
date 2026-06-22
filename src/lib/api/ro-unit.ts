@@ -68,7 +68,7 @@ export const fetchMyRODetails = async (): Promise<ROUnitDetails | null> => {
     a.status?.toUpperCase() === 'COMPLETED' && 
     (a.paymentStatus === 'Free' || a.type?.includes('Free Service'))
   ).length || 0;
-  const remainingServices = installation ? (installation.servicesCount !== undefined ? installation.servicesCount : 3) : 3;
+  const remainingServices = installation ? (installation.servicesCount !== undefined ? installation.servicesCount : 4) : 4;
   const totalAllocated = remainingServices + completedServices;
 
   // Add completed services to timeline

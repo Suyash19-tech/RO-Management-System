@@ -7,6 +7,7 @@ import { LayoutDashboard, Settings, Wrench, History, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FloatingBubbles } from "@/components/layout/FloatingBubbles";
 import { CustomerNotifications } from "@/components/layout/CustomerNotifications";
+import PushNotificationManager from "@/components/layout/PushNotificationManager";
 
 const MOBILE_NAV = [
   { label: "Home", href: "/home", icon: LayoutDashboard },
@@ -33,6 +34,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col min-h-[100dvh] bg-[#F8FAFC] font-sans w-full relative">
       <FloatingBubbles />
+      <PushNotificationManager />
       
       {/* Top Navigation Header */}
       <header className="sticky top-0 z-30 bg-white border-b border-slate-100 px-6 md:px-12 py-4 flex items-center justify-between">

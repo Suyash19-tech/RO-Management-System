@@ -16,3 +16,28 @@ self.addEventListener("fetch", (event) => {
   // This prevents any lag during client-side routing and fixes API failures.
   return;
 });
+
+// Listen for push notifications from the backend
+self.addEventListener('push', (event) => {
+  if (event.data) {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: data.icon || '/icon-192x192.png',
+      badge: data.badge || '/icon-192x192.png',
+      data: {
+        url: data.url || '/'
+      }
+    };
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.openWindow(event.notification.data.url)
+  );
+});

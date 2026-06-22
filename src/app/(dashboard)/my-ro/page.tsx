@@ -33,7 +33,7 @@ function getROFromCache(): ROUnitDetails | null {
       a.status?.toUpperCase() === 'COMPLETED' &&
       (a.paymentStatus === 'Free' || a.type?.includes('Free Service'))
     ).length || 0;
-    const remainingServices = installation.servicesCount !== undefined ? installation.servicesCount : 3;
+    const remainingServices = installation.servicesCount !== undefined ? installation.servicesCount : 4;
     const totalAllocated = remainingServices + completedServices;
 
     const timeline: ROUnitDetails["timeline"] = [];
