@@ -47,7 +47,7 @@ export function NotificationCard({ notification, onRead }: { notification: Notif
           <p className="text-sm text-slate-500 leading-relaxed mb-3">{notification.message}</p>
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-              {new Date(notification.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              {new Date(notification.timestamp || notification.createdAt || Date.now()).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </span>
             {!notification.read && (
               <button 

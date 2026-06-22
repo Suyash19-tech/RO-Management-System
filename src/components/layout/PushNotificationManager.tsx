@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useAuth } from '@/lib/context/AuthContext';
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -19,10 +18,12 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export default function PushNotificationManager() {
-  const { user } = useAuth();
-
   useEffect(() => {
-    if (!user || !user.phone) return;
+    const profileStr = localStorage.getItem("customer_profile");
+    if (!profileStr || profileStr === "null" || profileStr === "undefined") return;
+
+    const profile = JSON.parse(profileStr);
+    if (!profile.phone) return;
 
     const subscribeToPush = async () => {
       try {
@@ -66,7 +67,7 @@ export default function PushNotificationManager() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             subscription: subscription,
-            phone: user.phone
+            phone: profile.phone
           })
         });
 
@@ -78,7 +79,7 @@ export default function PushNotificationManager() {
     };
 
     subscribeToPush();
-  }, [user]);
+  }, []);
 
   return null;
 }
