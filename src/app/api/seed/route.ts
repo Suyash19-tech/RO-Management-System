@@ -1,7 +1,19 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { verifyJwtToken } from '@/lib/auth';
+import { cookies } from 'next/headers';
 
+// Destructive: wipes all data. Requires an admin session and is disabled in
+// production unless ALLOW_SEED=true.
 export async function GET() {
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SEED !== 'true') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+  const token = (await cookies()).get('admin_token')?.value;
+  const payload = token ? await verifyJwtToken(token) : null;
+  if (!payload || payload.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     // Clear existing data to ensure a clean state
     await prisma.$transaction([

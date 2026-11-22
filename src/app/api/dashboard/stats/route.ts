@@ -5,7 +5,7 @@ import { getMemoryCache, setMemoryCache } from '@/lib/memory-cache';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+async function computeStats(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get('filter') || 'this_month';
@@ -351,4 +351,22 @@ export async function GET(request: Request) {
     console.error('Failed to load dashboard stats:', error);
     return NextResponse.json({ error: 'Failed to load dashboard stats' }, { status: 500 });
   }
+}
+
+
+// Single-flight: concurrent requests for the same cache key share one
+// computation instead of each hitting the DB when the cache is cold.
+const inflight = new Map<string, Promise<{ body: unknown; status: number }>>();
+
+export async function GET(request: Request) {
+  const key = new URL(request.url).search;
+  let pending = inflight.get(key);
+  if (!pending) {
+    pending = computeStats(request)
+      .then(async (res) => ({ body: await res.json(), status: res.status }))
+      .finally(() => inflight.delete(key));
+    inflight.set(key, pending);
+  }
+  const { body, status } = await pending;
+  return NextResponse.json(body, { status });
 }
